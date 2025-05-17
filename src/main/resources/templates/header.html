@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>LinkUp</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+</head>
+<body>
+<header th:fragment="header(user)">
+    <div class="nav-container">
+        <nav>
+            <a href="/board">LinkUp</a>
+            <div><a href="/board">게시글보러가기</a></div>
+            <div th:if="${user != null}" style="display: flex;">
+                <a th:href="@{/users/{idx}(idx=${user.uIdx})}"
+                   th:text="${isSocial} ? ${user.name + '님의 마이페이지'} : ${user.uNickname + '님의 활동'}"></a>&nbsp;
+
+                <a th:href="@{/users/{idx}/editP(idx=${user.uIdx})}"
+                   th:text="${isSocial} ? ${user.name + '님의 마이페이지'} : ${user.uNickname + '님의 마이페이지'}"></a>&nbsp;
+
+                <a th:href="@{/users/{idx}/notion(idx=${user.uIdx})}"
+                   th:text="${isSocial} ? ${user.name + '님의 링크업 페이지'} : ${user.uNickname + '님의 링크업 페이지'}"></a>&nbsp;
+
+                <form th:action="@{/users/logout}" method="post" style="display: grid">
+                    <button type="submit">로그아웃</button>
+                </form>
+            </div>
+            <div th:if="${user == null}">
+                <a href="/users/loginP">로그인</a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 알림 표시용 div (필요하면 숨길 수 있음) -->
+    <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+</header>
+</body>
+</html>

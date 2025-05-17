@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="utf-8">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 사용자 목록</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        .blocked-user {
+            color: red;
+        }
+        .locked-user {
+            color: blue;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- CSRF 토큰을 메타 태그에 추가 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <script>
+        $(document).ready(function () {
+            // AJAX 요청 함수
+            function sendRequest(url, method, data, successCallback, errorCallback) {
+                $.ajax({
+                    url: url,
+                    method: method,
+                    data: data,
+                    beforeSend: function (xhr) {
+                        const csrfToken = $("meta[name='_csrf']").attr("content");
+                        const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+                        xhr.setRequestHeader(csrfHeader, csrfToken);
+                    },
+                    success: successCallback,
+                    error: errorCallback
+                });
+            }
+
+            // 차단, 잠금 해제, 역할 변경 버튼 이벤트
+            $(".block-button, .unblock-button, .unlock-button, .role-button").click(function () {
+                const self = $(this);  // this를 self에 할당하여 나중에 사용
+                console.log(self);
+                const userId = self.data("id");
+                console.log(userId);
+                const action = self.data("action");
+                console.log(action);
+                const blockReason = self.hasClass("block-button") ? prompt("차단 사유를 입력하세요 (부적절한 언어 사용, 비하, 기타)"): null;
+
+                // 데이터 설정 (blockReason이 필요할 경우만 포함)
+                const data = blockReason ? { blockReason: blockReason } : { action: action };
+
+                // URL 설정
+                const url = self.hasClass("block-button") ? `/admin/users/block/${userId}` :
+                    self.hasClass("unblock-button") ? `/admin/users/unblock/${userId}` :
+                        self.hasClass("unlock-button") ? `/admin/users/unlock/${userId}` :
+                            `/admin/users/${userId}/role`;
+
+                // AJAX 요청 보내기
+                sendRequest(url, 'POST', data, function (response) {
+                    if (response === "success") {
+                        alert(self.hasClass("block-button") || self.hasClass("unlock-button") ? "상태 변경되었습니다." : "변경되었습니다.");
+                        location.reload();  // 페이지 새로고침
+                    } else {
+                        alert("실패");
+                    }
+                }, function () {
+                    alert("요청 실패");
+                });
+            });
+        });
+    </script>
+
+</head>
+<body>
+<div th:replace="header :: header(${user})"></div>
+
+<div class="container">
+    <h1 class="mt-5">관리자 페이지</h1>
+    <button onclick="location.href='/admin/listForAdminP'">신고 게시글 보기</button>
+
+    <!-- 일반 사용자 목록 -->
+    <h2 class="mt-4">일반 사용자</h2>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>사용자명</th>
+            <th>이메일</th>
+            <th>전화번호</th>
+            <th>닉네임</th>
+            <th>생년월일</th>
+            <th>가입일자</th>
+            <th>역할</th>
+            <th>상태</th>
+            <th>작업</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td><a th:href="@{/users/{idx}(idx=${user.uIdx})}" th:text="${user.id}"></a></td>
+            <td th:text="${user.uUsername}">사용자명</td>
+            <td th:text="${user.uEmail}">이메일</td>
+            <td th:text="${user.uTelephone}">전화번호</td>
+            <td th:text="${user.uNickname}">닉네임</td>
+            <td th:text="${user.uBirthday}">생년월일</td>
+            <td th:text="${#temporals.format(user.uCreatedAt, 'yyyy-MM-dd')}">가입일자</td>
+            <td th:text="${user.uRole}">역할</td>
+            <td th:text="${user.uBlock != null ? '차단됨' : (user.isAccountLocked ? '잠금됨' : '정상')}"></td>
+            <td>
+                <button th:if="${user.uBlock == null}" class="btn btn-danger mt-2 block-button" th:data-id="${user.id}">
+                    차단
+                </button>
+                <button th:if="${user.uBlock != null}" class="btn btn-secondary mt-2 unblock-button" th:data-id="${user.id}">차단 해제</button>
+                <!-- 잠금 버튼 제거 -->
+                <button th:if="${user.isAccountLocked == true}" class="btn btn-warning mt-2 unlock-button" th:data-id="${user.id}">
+                    잠금 해제
+                </button>
+                <button th:if="${user.uRole == 'USER' || user.uRole == 'ADMIN' || user.uRole == 'SUB_ADMIN'}" class="btn mt-2 role-button"
+                        th:data-id="${user.id}" th:data-action="${user.uRole == 'USER' ? 'promote' : 'demote'}"
+                        th:text="${user.uRole == 'USER' ? '관리자 승격' : '관리자 해제'}"
+                        th:classappend="${user.uRole == 'USER' ? 'btn-warning' : 'btn-info'}">
+                </button>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

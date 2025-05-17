@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>사용자 목록</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- CSRF 토큰을 메타 태그에 추가 -->
+    <script src="/js/Js/session-timer2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+    <link rel="stylesheet" th:href="@{/js/css/u_list.css}">
+    <!-- CSRF 토큰을 메타 태그에 추가 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+</head>
+<body>
+<div class="container">
+
+    <!-- 헤더 포함 -->
+    <div th:replace="header :: header(${user})"></div>
+
+    <h1>사용자 목록</h1>
+
+    <!-- 사용자 목록 테이블 -->
+    <h2>일반 사용자</h2>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>사용자명</th>
+            <th>이메일</th>
+            <th>전화번호</th>
+            <th>닉네임</th>
+            <th>생년월일</th>
+            <th>가입일자</th>
+            <th>역할</th>
+            <th>작업</th>
+        </tr>
+        </thead>
+        <!-- 폼 로그인 사용자 목록 테이블 -->
+        <tbody>
+        <tr th:if="${user != null}" th:each="user : ${users}">
+            <td th:text="${user.u_id}">ID</td>
+            <td th:text="${user.u_username}">사용자명</td>
+            <td th:text="${user.u_email}">이메일</td>
+            <td th:text="${user.u_telephone}">전화번호</td>
+            <td th:text="${user.u_nickname}">닉네임</td>
+            <td th:text="${user.u_birthday}">생년월일</td>
+            <td th:text="${user.u_created_at}">가입일자</td>
+            <td th:text="${user.u_role}">역할</td>
+            <td>
+                <div class="button-group">
+                    <form th:action="@{/users/delete/{idx}(idx=${user.u_idx})}" th:method="delete">
+                        <button type="submit" class="btn btn-danger">삭제</button>
+                    </form>
+                    <form th:action="@{/users/{idx}/editP(idx=${user.u_idx})}" th:method="get">
+                        <button type="submit" class="btn btn-warning">수정하러가기</button>
+                    </form>
+                    <form th:action="@{/users/detail/{u_idx}(u_idx=${user.u_idx})}" th:method="get">
+                        <button type="submit" class="btn btn-info">상세보기</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        <tr th:if="${users == null}">
+            <td colspan="9" class="no-users-message">사용자 목록이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- 소셜 사용자 목록 테이블 -->
+    <h2>소셜 사용자</h2>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>소셜 제공자</th>
+            <th>이메일</th>
+            <th>사용자명</th>
+            <th>프로필 이미지</th>
+            <th>전화번호</th>
+            <th>생년월일</th>
+            <th>성별</th>
+            <th>가입일자</th>
+            <th>작업</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${social_user != null}" th:each="socialUser : ${social_users}">
+            <td th:text="${socialUser.socialUserId}">ID</td>
+            <td th:text="${socialUser.provider}">소셜 제공자</td>
+            <td th:text="${socialUser.email}">이메일</td>
+            <td th:text="${socialUser.name}">사용자명</td>
+            <td><img th:src="@{${socialUser.profileImageUrl}}" alt="Profile Image" width="50" height="50"></td>
+            <td th:text="${socialUser.phone}">전화번호</td>
+            <td th:text="${socialUser.birthyear}">생년월일</td>
+            <td th:text="${socialUser.gender}">성별</td>
+            <td th:text="${socialUser.createdAt}">가입일자</td>
+            <td>
+                <div class="button-group">
+                    <form th:action="@{/social-users/delete/{id}(id=${socialUser.socialUserId})}" th:method="delete">
+                        <button type="submit" class="btn btn-danger">삭제</button>
+                    </form>
+                    <form th:action="@{/social-users/{id}/editP(id=${socialUser.socialUserId})}" th:method="get">
+                        <button type="submit" class="btn btn-warning">수정하러가기</button>
+                    </form>
+                    <form th:action="@{/social-users/detail/{id}(id=${socialUser.socialUserId})}" th:method="get">
+                        <button type="submit" class="btn btn-info">상세보기</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        <tr th:if="${social_users == null}">
+            <td colspan="10" class="no-users-message">소셜 사용자 목록이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

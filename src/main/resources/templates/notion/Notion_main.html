@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Notion Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="stylesheet" th:href="@{/js/css/Notion_main.css}">
+
+    <!-- CKEditor CDN 추가 -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/38.0.1/classic/ckeditor.js"></script>
+    <script src="https://ckeditor.com/apps/ckfinder/3.5.0/ckfinder.js"></script>
+    <script src="/js/Js/notionPageJs.js"></script>
+    <script src="/js/Js/session-timer2.js"></script>
+    <script src="/js/Js/ssenotification.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+
+    <script>
+        // SSE 알림
+        document.addEventListener('DOMContentLoaded', function () {
+            const userId = $('#userId').data('username');
+            if (userId) {
+                startSSENotifications(userId);
+            }
+        });
+    </script>
+</head>
+<body>
+<div th:replace="header :: header(${user})"></div>
+<div id="userId" th:data-username="${isSocial} ? ${user.name} : ${user.uNickname}"></div>
+<header>
+    <h1>My Notion Page</h1>
+</header>
+<div class="container">
+    <div class="notion-list">
+        <h2>My Notions</h2>
+        <button id="newNotionBtn" class="save-btn">New Notion</button>
+        <ul id="notionList">
+            <li th:each="notion : ${notions}">
+                <a href="javascript:void(0);" class="notion-link" th:data-id="${notion.n_idx}" th:text="${notion.n_title}">Notion Title</a>
+                <button id="deleteNotionBtn" th:data-id="${notion.n_idx}" class="cancel-btn">삭제</button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="notion-content" id="notionContent">
+        <h2><input type="text" id="editTitle" value="" placeholder="Enter the title" class="edit-input"></h2>
+        <textarea id="editContent" class="edit-textarea" placeholder="Enter the content..."></textarea>
+        <div id="pageTime" value=""></div>
+        <div class="button-container">
+            <div id="userId2" th:data-username="${isSocial} ? ${user.name} : ${user.uNickname}"></div>
+            <input type="hidden" id="postTitle">
+            <button id="saveBtn" th:data-uidx="${user.uIdx}" class="save-btn">저장</button>
+            <button id="cancelBtn" class="cancel-btn">전체 비우기</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,134 @@
+/* 전역 스타일 */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
+/* 페이지 컨테이너 */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 폼 스타일 */
+form {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+}
+
+/* 타이틀 스타일 */
+h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+/* 입력 필드 스타일 */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="date"] {
+    width: 95%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus {
+    outline: none;
+    border-color: #007BFF;
+}
+
+/* 버튼 스타일 */
+button {
+    width: 100%;
+    padding: 10px;
+    font-size: 1.2rem;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* 중복 확인 버튼 스타일 */
+button.check-duplicate {
+    width: auto;
+    background-color: #28a745;
+    margin-left: 10px;
+}
+
+button.check-duplicate:hover {
+    background-color: #218838;
+}
+
+div{
+    display: inline;
+}
+
+/* 입력 필드에 아이콘 넣기 */
+div.input-group {
+    position: relative;
+}
+
+div.input-group input {
+    padding-left: 35px;
+}
+
+/* 아이콘 스타일 */
+div.input-group i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #007BFF;
+}
+
+/* 경고 메시지 */
+.alert {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    display: none;
+}
+
+a {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: #007BFF;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+/* 숨김 처리 */
+.hidden {
+    display: none;
+}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>신고된 게시글 관리</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="stylesheet" th:href="@{/js/css/listForAdmin.css}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="/js/Js/listForAdmin.js"></script>
+    <script src="/js/Js/ssenotification.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                theme: 'bootstrap4',  // Bootstrap 4 스타일과 호환되도록 설정
+                width: '100%',  // 선택 박스가 부모 요소에 맞게 늘어남
+            });
+        });
+
+    </script>
+</head>
+<body>
+<div th:replace="header :: header(${user})"></div>
+<div id="userId" th:data-username="${user.uUsername}"></div> <!-- 사용자 ID를 data-username에 저장 -->
+
+<h1>신고된 게시글 페이지</h1>
+
+<!-- 네비게이션 탭 -->
+<div class="tabs">
+    <button class="tab-btn" data-target="board-tab">게시글 신고 화면</button>
+    <button class="tab-btn" data-target="comment-tab">댓글 신고 화면</button>
+</div>
+
+<!-- 게시글 신고 탭 내용 -->
+<div id="board-tab" class="tab-content" >
+    <div class="search-container" style="display: flex; justify-content: flex-end; align-items: center;">
+        <select id="search">
+            <option value="all">전체검색</option>
+            <option value="title">제목</option>
+            <option value="content">내용</option>
+            <option value="writer">작성자</option>
+        </select>
+
+        <input id="input_text" th:type="text" placeholder="검색어를 입력해주세요">
+        <button onclick="textSearch();">검색</button>
+    </div>
+    <div class="boardCategory">
+        <select id="boardCategory" class="form-control select2">
+            <option value="GENERAL">일반</option>
+            <option value="INQUIRY">문의</option>
+            <option value="NOTICE">공지사항</option>
+        </select>
+    </div>
+
+    <table>
+        <tr>
+            <th>번호</th>
+            <th>제목</th>
+            <th>카테고리</th>
+            <th>작성자</th>
+            <th>등록일</th>
+            <th>신고 수</th>
+            <th>신고 상태</th>
+            <th>작업</th>
+        </tr>
+
+        <tr th:each="board : ${boardList}" align="center">
+            <td th:text="${board.bIdx}">번호</td>
+            <td>
+                <a th:href="@{/board/{id}(id=${board.bIdx})}" th:text="${board.title}">제목</a>
+            </td>
+            <td>
+                <span th:if="${board.category == 'GENERAL'}" th:text="'일반'"></span>
+                <span th:if="${board.category == 'INQUIRY'}" th:text="'문의'"></span>
+                <span th:if="${board.category == 'NOTICE'}" th:text="'공지사항'"></span>
+            </td>
+            <td th:text="${board.writer != null ? board.writer.getUNickname() : (board.socialUser != null ? board.socialUser.name : '익명 사용자')}">작성자</td>
+            <td th:text="${#dates.format(board.uploadTime, 'yyyy-MM-dd')}">작성일</td>
+            <td th:text="${board.report}">신고 수</td>
+            <td th:text="${board.isDeleted == 'Y' ? '삭제됨' : (board.isDeleted == 'R' ? '신고' : '정상')}">신고 상태</td>
+            <td>
+                <button class="report-action-button" th:data-id="${board.bIdx}" data-action="delete"
+                        th:if="${board.isDeleted == 'R'}">삭제</button>
+                <button class="report-action-button" th:data-id="${board.bIdx}" data-action="resolve"
+                        th:if="${board.isDeleted == 'R' || board.isDeleted == 'Y'}">신고 해결</button>
+            </td>
+        </tr>
+    </table>
+
+    <div class="pagination-container">
+        <ul class="pagination justify-content-center">
+            <li th:classappend="${!boardList.hasPrevious() ? 'disabled' : ''}" class="page-item">
+                <a th:href="@{${boardList.hasPrevious() ? '/admin/listForAdminP?page=' + (boardList.pageable.pageNumber - 1) : '#'}}"
+                   class="page-link">&laquo;</a>
+            </li>
+            <li th:each="i : ${#numbers.sequence(0, boardList.totalPages - 1)}"
+                th:classappend="${boardList.pageable.pageNumber == i ? 'active' : ''}" class="page-item">
+                <a th:href="@{/admin/listForAdminP?page={page}(page=${i})}" class="page-link">[[${i + 1}]]</a>
+            </li>
+            <li th:classappend="${!boardList.hasNext() ? 'disabled' : ''}" class="page-item">
+                <a th:href="@{${boardList.hasNext() ? '/admin/listForAdminP?page=' + (boardList.pageable.pageNumber + 1) : '#'}}"
+                   class="page-link">&raquo;</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- 댓글 신고 탭 내용 -->
+<div id="comment-tab" class="tab-content">
+    <div class="search-container" style="display: flex; justify-content: flex-end; align-items: center;">
+        <select id="search_comment">
+            <option value="all_comment">--검색선택--</option>
+            <option value="content_comment">내용</option>
+            <option value="writer_comment">작성자</option>
+        </select>
+
+        <input id="input_text_comment" th:type="text" placeholder="검색어를 입력해주세요">
+        <button onclick="textSearch();">검색</button>
+    </div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>번호</th>
+            <th>작성자</th>
+            <th>댓글 내용</th>
+            <th>신고 수</th>
+            <th>작업</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="comment : ${commentList}" align="center">
+            <td th:text="${comment.c_idx}">번호</td>
+            <td th:text="${comment.c_writer}">작성자</td>
+            <td th:text="${comment.c_content}">댓글 내용</td>
+            <td th:text="${comment.c_report}">신고 수</td>
+            <td>
+                <button class="comment-action-button btn btn-success btn-sm" th:data-id="${comment.c_idx}" data-action="resolve"
+                        title="이거는 신고취소처리 기능임">댓글 신고 해결</button>
+                <button class="comment-action-button btn btn-danger btn-sm" th:data-id="${comment.c_idx}" data-action="delete"
+                        title="댓글 삭제">댓글 삭제</button>
+            </td>
+        </tr>
+        <tr th:if="${commentList.size == 0}">
+            <td colspan="5"> 신고당한 댓글이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination-container">
+        <ul class="pagination justify-content-center">
+            <!-- 이전 페이지 버튼 -->
+            <li th:classappend="${!commentList.hasPrevious() ? 'disabled' : ''}" class="page-item">
+                <a th:href="@{/admin/listForAdminP(page=${commentList.pageable.pageNumber - 1})}" class="page-link">&laquo;</a>
+            </li>
+
+            <!-- 페이지 번호 버튼 -->
+            <li th:each="i : ${#numbers.sequence(0, commentList.totalPages - 1)}"
+                th:classappend="${commentList.pageable.pageNumber == i ? 'active' : ''}" class="page-item">
+                <a th:href="@{/admin/listForAdminP(page=${i})}" class="page-link">[[${i + 1}]]</a>
+            </li>
+
+            <!-- 다음 페이지 버튼 -->
+            <li th:classappend="${!commentList.hasNext() ? 'disabled' : ''}" class="page-item">
+                <a th:href="@{/admin/listForAdminP(page=${commentList.pageable.pageNumber + 1})}" class="page-link">&raquo;</a>
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

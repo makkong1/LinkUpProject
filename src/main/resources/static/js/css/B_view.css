@@ -1,0 +1,152 @@
+/* 기본 설정 */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7fb;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h3 {
+    color: #333;
+}
+
+/* 테이블 스타일 */
+table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+td {
+    padding: 15px;
+    border: 1px solid #ddd;
+}
+
+td h1, td p {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* 버튼 스타일 */
+input[type="button"] {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+input[type="button"]:hover {
+    background-color: #0056b3;
+}
+
+/* 댓글 입력창 */
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-top: 10px;
+    resize: vertical;
+}
+
+/* 댓글 리스트 */
+#commentList {
+    margin-top: 30px;
+}
+
+.comment {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.comment p {
+    margin: 5px 0;
+}
+
+.comment strong {
+    color: #007bff;
+}
+
+/* 작성일 스타일 */
+.comment small {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 페이징 스타일 */
+.pagination-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination {
+    list-style: none;
+    padding: 0;
+    display: inline-block;
+}
+
+.pagination li {
+    display: inline;
+    margin-right: 5px;
+}
+
+.pagination a {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.pagination a:hover {
+    background-color: #0056b3;
+}
+
+.pagination .disabled a {
+    background-color: #ccc;
+    pointer-events: none;
+}
+
+.pagination .active a {
+    background-color: #0056b3;
+}
+
+/* 페이지당 댓글 수 조정 스타일 */
+form {
+    margin-top: 15px;
+}
+
+select {
+    padding: 5px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+/* 목록으로 돌아가기 */
+a {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+    background-color: #28a745;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+a:hover {
+    background-color: #218838;
+}

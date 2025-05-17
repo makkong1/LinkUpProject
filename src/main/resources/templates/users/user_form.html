@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>사용자 생성/수정</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/Js/session-timer2.js"></script>
+    <link rel="stylesheet" th:href="@{/js/css/user_form.css}">
+
+    <!-- CSRF 토큰을 메타 태그에 추가 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <script>
+        // CSRF 토큰을 모든 AJAX 요청의 헤더에 추가하는 설정
+        $(document).ajaxSend(function (e, xhr, options) {
+            const csrfToken = $("meta[name='_csrf']").attr("content");
+            const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+            if (csrfToken) {
+                xhr.setRequestHeader(csrfHeader, csrfToken);
+            }
+        });
+
+        // 닉네임 중복 확인
+        function checkNickname() {
+            let nickname = $("#uNickname").val();
+            if (nickname) {
+                $.ajax({
+                    url: '/users/new/checkNickname',  // 경로 수정
+                    type: 'POST',
+                    data: {nickname: nickname},
+                    success: function (response) {
+                        if (response.nicknameDuplicate) {
+                            alert(response.message);  // 중복이면 메시지 출력
+                        } else {
+                            alert(response.message);  // 사용 가능하면 메시지 출력
+                        }
+                    },
+                    error: function () {
+                        alert("중복 확인 중 오류가 발생했습니다.");
+                    }
+                });
+            } else {
+                alert("닉네임을 입력해 주세요.");
+            }
+        }
+
+        // 사용자 ID 중복 확인
+        function checkId() {
+            let userId = $("#id").val();
+            if (userId) {
+                $.ajax({
+                    url: '/users/new/checkId',  // 경로 수정
+                    type: 'POST',
+                    data: {id: userId},
+                    success: function (response) {
+                        if (response.idDuplicate) {
+                            alert(response.message);  // 중복이면 메시지 출력
+                        } else {
+                            alert(response.message);  // 사용 가능하면 메시지 출력
+                        }
+                    },
+                    error: function () {
+                        alert("중복 확인 중 오류가 발생했습니다.");
+                    }
+                });
+            } else {
+                alert("사용자 ID를 입력해 주세요.");
+            }
+        }
+
+        // 폼 제출 전에 클라이언트 측에서 유효성 검사
+        function validateForm(event) {
+            let isValid = true;
+            // 각 필드 검사
+            const fields = document.querySelectorAll('input');
+            fields.forEach(field => {
+                const errorDiv = field.parentElement.querySelector('.error-message');
+
+                if (!field.checkValidity()) {
+                    // 유효성 검사 실패 시 에러 메시지 출력
+                    isValid = false;
+                    const errorMessage = field.validationMessage;  // validationMessage 속성 사용
+                    errorDiv.textContent = errorMessage;  // 해당 필드의 오류 메시지 표시
+                } else {
+                    errorDiv.textContent = ''; // 유효성 검사 통과 시 에러 메시지 제거
+                }
+            });
+
+            // 유효성 검사가 실패한 경우 폼 전송을 막음
+            if (!isValid) {
+                event.preventDefault();
+                console.log("유효성 검사 실패, 다시입력필요")
+            }
+        }
+
+    </script>
+
+</head>
+<body>
+<h1>회원가입</h1>
+<div th:replace="header :: header(${user})"></div>
+<form action="/users/new" method="POST" onsubmit="validateForm(event)">
+    <!-- CSRF 토큰을 숨은 필드로 추가 -->
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+    <!-- 사용자명 입력 -->
+    <div>
+        <label for="uUsername">사용자명</label>
+        <input type="text" id="uUsername" name="uUsername" required/>
+        <div class="error-message" style="color: red;"></div>
+    </div>
+
+    <!-- 아이디 입력 -->
+    <div>
+        <label for="id">아이디</label>
+        <input type="text" id="id" name="id" required  />
+        <button type="button" onclick="checkId()">아이디 중복 확인</button>  <!-- 중복 확인 버튼 -->
+        <div class="error-message" style="color: red;"></div>
+    </div>
+
+    <!-- 비밀번호 입력 -->
+    <div>
+        <label for="pwd">비밀번호</label>
+        <input type="password" id="pwd" name="pwd"/>
+        <div class="error-message" style="color: red;"></div>
+    </div>
+
+    <!-- 닉네임 입력 -->
+    <div>
+        <label for="uNickname">닉네임</label>
+        <input type="text" id="uNickname" name="uNickname" required maxlength="8"/>
+        <button type="button" onclick="checkNickname()">닉네임 중복 확인</button>  <!-- 중복 확인 버튼 -->
+        <div class="error-message" style="color: red;"></div>
+    </div>
+
+    <!-- 이메일 입력 -->
+    <div>
+        <label for="uEmail">이메일</label>
+        <input type="email" id="uEmail" name="uEmail" required/>
+        <div class="error-message" style="color: red;"></div>
+    </div>
+
+    <!-- 전화번호 입력 -->
+    <div>
+        <label for="uTelephone">전화번호</label>
+        <input type="text" id="uTelephone" name="uTelephone" required pattern="^\d{3}\d{4}\d{4}$"/>
+        <div class="error-message" style="color: red;"></div>
+    </div>
+
+    <!-- 생년월일 입력 -->
+    <div>
+        <label for="uBirthday">생년월일</label>
+        <input type="date" id="uBirthday" name="uBirthday" required/>
+        <div class="error-message" style="color: red;"></div>
+    </div>
+
+    <button type="submit">회원가입</button>
+</form>
+
+<!-- 목록으로 돌아가기 링크 -->
+<a href="/users">목록으로 돌아가기</a>
+
+</body>
+</html>

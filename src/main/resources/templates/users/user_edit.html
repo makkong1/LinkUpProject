@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>사용자 수정</title>
+    <link rel="stylesheet" th:href="@{/js/css/user_edit.css}">
+
+    <!-- CSRF 토큰을 메타 태그에 추가 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <!-- 밑에 스크립트랑 메타데이터 두개는 앞으로 계속 넣어야된다   -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/Js/session-timer2.js"></script>
+    <script src="/js/Js/ssenotification.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userId = $('#userId').data('username'); // HTML에서 userId를 가져온다고 가정
+            if (userId) {
+                startSSENotifications(userId); // SSE 알림 시작
+            }
+        });
+    </script>
+</head>
+<body>
+<div th:replace="header :: header(${user})"></div>
+<div id="userId" th:data-username="${user.uUsername}"></div> <!-- 사용자 ID를 data-username에 저장 -->
+<h1>사용자 수정</h1>
+<!-- 폼로그인버전 -->
+<form th:action="${isSocialLogin} ? @{/social_users/{socialUserId}/edit(socialUserId=${socialUser.socialUserId})} : @{/users/{u_idx}/edit(u_idx=${users.uIdx})}" th:method="put">
+    <!-- 공통 필드 -->
+    <div>
+        <label for="name">이름:</label>
+        <input type="text" id="name" name="name" th:value="${isSocialLogin} ? ${socialUser.name} : ${users.uUsername}" required />
+    </div>
+
+    <div>
+        <label for="email">이메일:</label>
+        <input type="email" id="email" name="email" th:value="${isSocialLogin} ? ${socialUser.email} : ${users.uEmail}" required />
+    </div>
+
+    <!-- 폼 로그인 사용자 전용 필드 -->
+    <div th:if="${!isSocialLogin}">
+        <label for="uNickname">닉네임:</label>
+        <input type="text" id="uNickname" name="uNickname" th:value="${users.uNickname}" required />
+    </div>
+
+    <div th:if="${!isSocialLogin}">
+        <label for="uTelephone">전화번호:</label>
+        <input type="text" id="uTelephone" name="uTelephone" th:value="${users.uTelephone}" required />
+    </div>
+
+    <div th:if="${!isSocialLogin}">
+        <label for="uBirthday">생일:</label>
+        <input type="date" id="uBirthday" name="uBirthday" th:value="${users.uBirthday}" required />
+    </div>
+
+    <!-- 소셜 로그인 사용자 전용 필드 -->
+    <div th:if="${isSocialLogin}">
+        <label for="provider">소셜 제공자:</label>
+        <input type="text" id="provider" name="provider" th:value="${socialUser.provider}" readonly />
+    </div>
+
+    <div th:if="${isSocialLogin}">
+        <label for="phone">전화번호:</label>
+        <input type="text" id="phone" name="phone" th:value="${socialUser.phone}" required />
+    </div>
+
+    <div th:if="${isSocialLogin}">
+        <label for="birthyear">출생년도:</label>
+        <input type="text" id="birthyear" name="birthyear" th:value="${socialUser.birthyear}" />
+    </div>
+
+    <div th:if="${isSocialLogin}">
+        <label for="gender">성별:</label>
+        <input type="text" id="gender" name="gender" th:value="${socialUser.gender}" />
+    </div>
+
+    <button type="submit">수정</button>
+</form><a th:href="@{/users/list}">목록으로 돌아가기</a>
+</body>
+</html>

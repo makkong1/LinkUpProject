@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Contents</title>
+    <script src="/js/Js/session-timer2.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="stylesheet" th:href="@{/js/css/user-content.css}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/js/Js/ssenotification.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userId = $('#userId').data('username');
+            if (userId) {
+                startSSENotifications(userId);
+            }
+
+            // 탭 기능
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            // 기본적으로 두 번째 탭(Boards)이 선택되도록 설정
+            tabs[0].classList.add('active');
+            contents[0].classList.add('active');
+
+            tabs.forEach((tab, index) => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    contents[index].classList.add('active');
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div th:replace="header :: header(${user})"></div>
+<div id="userId" th:data-username="${user.uUsername}"></div>
+
+<h1>User Contents</h1>
+
+<!-- 탭 버튼들 -->
+<div class="tabs">
+    <div class="tab">Boards</div>
+    <div class="tab">Comments</div>
+    <div class="tab">Notions</div>
+</div>
+
+<!-- Boards Section -->
+<div class="tab-content">
+    <h2>Boards</h2>
+    <ul class="boardContents">
+        <li th:each="board : ${userContents.boards}">
+            <p>
+                카테고리:
+                <span th:if="${board.category == 'GENERAL'}" th:text="'일반'"></span>
+                <span th:if="${board.category == 'INQUIRY'}" th:text="'문의'"></span>
+                <span th:if="${board.category == 'NOTICE'}" th:text="'공지사항'"></span>
+            </p>
+            <p>제목: <span th:text="${board.title}"></span></p>
+            <p>작성자: <span th:text="${board.writer.getUNickname()}"></span></p>
+            <p>내용: <span th:text="${board.content}"></span></p>
+            <p>조회수: <span th:text="${board.viewCount}"></span></p>
+            <p>좋아요: <span th:text="${board.likeCount}"></span></p>
+            <p>작성일: <span th:text="${#dates.format(board.uploadTime, 'yyyy-MM-dd')}"></span></p>
+        </li>
+    </ul>
+</div>
+
+<!-- Comments Section -->
+<div class="tab-content">
+    <h2>Comments</h2>
+    <ul class="commentContents">
+        <li th:each="comment : ${userContents.comments}">
+            <p>Writer: <span th:text="${comment.writer.getUNickname()}"></span></p>
+            <p>Content: <span th:text="${comment.cContent}"></span></p>
+            <p>Likes: <span th:text="${comment.cLike}"></span></p>
+            <p>Created At: <span th:text="${#dates.format(comment.cUpload, 'yyyy-MM-dd')}"></span></p>
+        </li>
+    </ul>
+</div>
+
+<!-- Notions Section -->
+<div class="tab-content">
+    <h2>Notions</h2>
+    <ul class="notionContents">
+        <li th:each="notion : ${userContents.notions}">
+            <p>Title: <span th:text="${notion.nTitle}"></span></p>
+            <p>Writer: <span th:text="${notion.writer.getUNickname()}"></span></p>
+            <p>Content: <span th:text="${notion.nContent}"></span></p>
+            <p>Created At: <span th:text="${notion.NUploadTime}"></span></p>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

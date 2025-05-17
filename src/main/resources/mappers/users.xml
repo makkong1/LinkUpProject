@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-mapper-3.0.dtd">
+
+<mapper namespace="kh.link_up.mapper.UserMapper">
+
+    <select id="getAllUsers" resultType="Users">
+        SELECT u_nickname FROM users
+    </select>
+
+    <delete id="deleteByUserId" parameterType="String">
+        DELETE FROM users WHERE u_id = #{u_Id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="utf-8">
+<head>
+    <title>게시글 작성</title>
+
+    <!-- CSS 추가 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/js/css/b-form.css}">
+    <!-- CSRF 토큰을 메타 태그에 추가 -->
+    <script src="/js/Js/session-timer2.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/js/Js/ssenotification.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userId = $('#userId').data('username'); // HTML에서 userId를 가져온다고 가정
+            if (userId) {
+                startSSENotifications(userId); // SSE 알림 시작
+            }
+        });
+    </script>
+</head>
+<body>
+<h1>게시글 작성</h1>
+<div th:replace="header :: header(${user})"></div>
+<div id="userId"
+     th:data-username="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}">
+</div>
+
+<form th:action="@{/board/save}" th:object="${board}" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="writer">작성자:</label>
+        <input type="text" id="writer" class="form-control" th:value="${isSocial} ? ${user.name} : ${user.uNickname}" required readonly />
+    </div>
+    <div class="form-group">
+        <label for="b_category">카테고리:</label>
+        <select id="b_category" class="form-control" th:field="*{category}" required>
+            <option value="" disabled selected>카테고리 선택</option>
+            <option value="GENERAL" th:text="'일반'">일반</option>
+            <option value="INQUIRY" th:text="'문의'">문의</option>
+            <option value="NOTICE" th:text="'공지사항'" th:if="${isSocial} ?  ${user.getAuthorities().contains('ROLE_ADMIN')} : ${user.uRole == 'ADMIN'} ">공지사항</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="b_title">제목:</label>
+        <input type="text" id="b_title" class="form-control" th:field="*{title}" required />
+    </div>
+    <div class="form-group">
+        <label for="b_content">내용:</label>
+        <textarea id="b_content" class="form-control" rows="5" th:field="*{content}" required></textarea>
+    </div>
+    <div class="form-group">
+        <label for="b_pwd">비밀번호:</label>
+        <input type="password" id="b_pwd" class="form-control" th:field="*{password}" required />
+    </div>
+    <div class="form-group">
+        <label for="b_files">파일 첨부:</label>
+        <div class="file-upload">
+            <i class="fas fa-upload"></i> 파일을 여기에 끌어다 놓으세요
+        </div>
+        <input type="file" id="b_files" name="files" multiple style="display:none" />
+    </div>
+    <button type="submit" class="btn btn-primary">작성하기</button>
+</form>
+
+<a href="/board">목록으로 돌아가기</a>
+
+<script>
+    // 파일 업로드 필드 클릭 시 파일 선택창 열기
+    document.querySelector('.file-upload').addEventListener('click', function () {
+        document.getElementById('b_files').click();
+    });
+</script>
+
+</body>
+</html>
