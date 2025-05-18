@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -39,7 +38,6 @@ public class BoardService {
     private final BoardConverter boardConverter;
     private final UsersService usersService;
     private final SocialUserRepository socialUserRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
     private final BoardCacheService boardCacheService;
 
     // 전체 게시물을 페이징 처리하여 가져오는 메서드 (관리자 전용)
