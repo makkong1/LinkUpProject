@@ -1,15 +1,21 @@
 function startSSENotifications(userId) {
-    // SSE 연결 설정
+    // 익명 사용자 차단
+    if (!userId || userId === "Anonymous") {
+        console.log("로그인하지 않은 사용자는 SSE 연결을 하지 않습니다.");
+        return;
+    }
+
+    // SSE 연결 시작
     const eventSource = new EventSource(`/users/notifications/${userId}`);
 
     eventSource.onmessage = function (event) {
-//        alert(event.data);
         const message = event.data;
         showNotification(message);
     };
 
     eventSource.onerror = function (event) {
-        console.error("SSE 연결 오류", event);
+        console.error("SSE 연결 오류 발생:", event);
+        eventSource.close(); // 오류 발생 시 연결 종료 (무한 재시도 방지)
     };
 }
 

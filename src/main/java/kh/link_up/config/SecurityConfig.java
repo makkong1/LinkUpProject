@@ -65,7 +65,9 @@ public class SecurityConfig {
                                 "/notion/image", // 노션파일
                                 "/js/**",
                                 "/actuator/**",
-                                "/monitoring/**"
+                                "/monitoring/**",
+                                "/err/**",
+                                "/favicon.ico"
                         ).permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUB_ADMIN")
                         //모니터링 관련 부분은 개발자 로컬환경에서만 가능하게 만들기

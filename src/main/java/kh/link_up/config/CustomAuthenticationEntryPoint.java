@@ -17,16 +17,19 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint{
     // like 인증인듯?
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        log.info("AuthenticationEntryPoint invoked");
+        log.info("EntryPoint invoked for URI: {}", request.getRequestURI());
 
-        // 인증되지 않은 사용자가 요청했을 때
         if (isAjaxRequest(request)) {
-            // AJAX 요청일 경우 401 응답을 JSON 형식으로 반환
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"message\": \"로그인이 필요합니다.\"}");
-        };
+        } else {
+            // 일반 요청일 경우 세션에 메시지 저장 후 리다이렉트
+            request.getSession().setAttribute("msg", "로그인이 필요한 페이지입니다.");
+            response.sendRedirect("/err/denied-page"); // 또는 /login 으로 설정 가능
+        }
     }
+
 
     private boolean isAjaxRequest(HttpServletRequest request) {
         String header = request.getHeader("X-Requested-With");

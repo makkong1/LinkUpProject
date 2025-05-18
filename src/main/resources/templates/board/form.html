@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="utf-8">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <title>게시글 작성</title>
 
@@ -19,9 +19,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const userId = $('#userId').data('username'); // HTML에서 userId를 가져온다고 가정
-            if (userId) {
-                startSSENotifications(userId); // SSE 알림 시작
-            }
+             if (userId && userId !== 'Anonymous') {  // 익명일 경우 SSE 연결 안 함
+                startSSENotifications(userId);
+             }
         });
     </script>
 </head>
@@ -35,7 +35,9 @@
 <form th:action="@{/board/save}" th:object="${board}" method="post" enctype="multipart/form-data">
     <div class="form-group">
         <label for="writer">작성자:</label>
-        <input type="text" id="writer" class="form-control" th:value="${isSocial} ? ${user.name} : ${user.uNickname}" required readonly />
+        <input type="text" id="writer" class="form-control"
+               th:value="${isSocial ? user.name : user.uNickname}"
+               required readonly />
     </div>
     <div class="form-group">
         <label for="b_category">카테고리:</label>
@@ -43,7 +45,10 @@
             <option value="" disabled selected>카테고리 선택</option>
             <option value="GENERAL" th:text="'일반'">일반</option>
             <option value="INQUIRY" th:text="'문의'">문의</option>
-            <option value="NOTICE" th:text="'공지사항'" th:if="${isSocial} ?  ${user.getAuthorities().contains('ROLE_ADMIN')} : ${user.uRole == 'ADMIN'} ">공지사항</option>
+            <option value="NOTICE" th:text="'공지사항'"
+                    th:if="${isSocial ? user.authorities.contains('ROLE_ADMIN') : user.uRole == 'ADMIN'}">
+                공지사항</option>
+
         </select>
     </div>
     <div class="form-group">
