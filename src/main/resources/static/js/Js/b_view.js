@@ -55,45 +55,55 @@ $(document).ready(function () {
       data: JSON.stringify(commentData),
       contentType: "application/json",
       success: function (response) {
-        alert("댓글이 등록되었습니다.");
-        location.reload(); // 페이지 새로 고침
-        $("#commentContent").val(""); // 댓글 입력창 초기화
+        const newCommentHtml = `
+          <div class="comment">
+            <strong>${response.c_idx} 번</strong>
+            <p>
+              <strong>${response.c_writer}</strong>: ${response.c_content}
+            </p>
+            <p><small>작성일: ${response.c_upLoad}</small></p>
+            <div>
+              <input type="button" value="삭제" data-comment-id="${response.c_idx}" />
+            </div>
+          </div>
+        `;
+        $("#commentList").append(newCommentHtml);  // 기존 댓글 하단에 추가
+        $("#commentContent").val("");              // 입력창 초기화
       },
       error: handleError, // error 처리 함수 호출
     });
   });
 
-  // 좋아요 증가
-  $(document).on("click", "#likeButton", function () {
-    const boardId = $(this).data("board-id"); // 게시글 ID
+// 좋아요 증가
+$(document).on("click", "#likeButton", function () {
+  const boardId = $(this).data("board-id");
 
-    // AJAX 요청으로 좋아요 처리
-    $.ajax({
-      url: "/board/" + boardId + "/like",
-      method: "POST",
-      contentType: "application/json",
-      success: function (response) {
-        location.reload(); // 페이지 새로고침
-      },
-      error: handleError, // error 처리 함수 호출
-    });
+  $.ajax({
+    url: "/board/" + boardId + "/like",
+    method: "POST",
+    contentType: "application/json",
+    success: function (response) {
+    console.log($("#likeCount").length);  // 0이면 선택자 문제
+      $("#likeCount").text(response.likeCount); // 값만 갱신
+    },
+    error: handleError,
   });
+});
 
-  // 싫어요 증가
-  $(document).on("click", "#dislikeButton", function () {
-    const boardId = $(this).data("board-id"); // 게시글 ID
+// 싫어요 증가
+$(document).on("click", "#dislikeButton", function () {
+  const boardId = $(this).data("board-id");
 
-    // AJAX 요청으로 싫어요 처리
-    $.ajax({
-      url: "/board/" + boardId + "/dislike",
-      method: "POST",
-      contentType: "application/json",
-      success: function (response) {
-        location.reload(); // 페이지 새로고침
-      },
-      error: handleError, // error 처리 함수 호출
-    });
+  $.ajax({
+    url: "/board/" + boardId + "/dislike",
+    method: "POST",
+    contentType: "application/json",
+    success: function (response) {
+      $("#dislikeCount").text(response.dislikeCount); // 값만 갱신
+    },
+    error: handleError,
   });
+});
 
   // 댓글 삭제
   $(document).on("click", "#deleteComment", function () {

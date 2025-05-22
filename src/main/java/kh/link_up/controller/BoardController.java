@@ -5,8 +5,10 @@ import kh.link_up.domain.Users;
 import kh.link_up.dto.BoardDTO;
 import kh.link_up.dto.BoardListDTO;
 import kh.link_up.dto.CommentDTO;
+import kh.link_up.repository.BoardRepository;
 import kh.link_up.service.BoardService;
 import kh.link_up.service.CommentService;
+import kh.link_up.service.LikeDislikeCacheService;
 import kh.link_up.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Controller
@@ -42,6 +45,8 @@ public class BoardController {
     private final BoardService boardService;
     private final UsersService usersService;
     private final CommentService commentService;
+    private final LikeDislikeCacheService likeDislikeCacheService;
+    private final BoardRepository boardRepository;
 
     @GetMapping
     public String list(
@@ -155,18 +160,40 @@ public class BoardController {
         return "failure"; // 실패 시 응답
     }
 
-    // 좋아요 증가 처리
+    // 좋아요 증가
     @PostMapping("/{bIdx}/like")
-    public ResponseEntity<Void> increaseLikeCount(@PathVariable Long bIdx) {
-        boardService.increaseLikeCount(bIdx);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, Long>> increaseLikeCount(@PathVariable Long bIdx) {
+        // 캐시에 1 증가
+        likeDislikeCacheService.increaseLikeCount(bIdx);
+
+        // DB에서 기존 값 가져오기 (없으면 0)
+        long dbLike = boardRepository.findById(bIdx)
+                .map(board -> (long) board.getLikeCount())
+                .orElse(0L);
+
+        // Redis 값 가져오기
+        long redisLike = likeDislikeCacheService.getLikeCount(bIdx);
+
+        // 총합 전달
+        Map<String, Long> result = Map.of("likeCount", redisLike + dbLike);
+        log.debug("LIKE 응답 : {}", result);
+        return ResponseEntity.ok(result);
     }
 
-    // 싫어요 증가 처리
+    // 싫어요 증가
     @PostMapping("/{bIdx}/dislike")
-    public ResponseEntity<Void> increaseDislikeCount(@PathVariable Long bIdx) {
-        boardService.increaseDislikeCount(bIdx);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, Long>> increaseDislikeCount(@PathVariable Long bIdx) {
+        likeDislikeCacheService.increaseDislikeCount(bIdx);
+
+        long dbDislike = boardRepository.findById(bIdx)
+                .map(board -> (long) board.getDislikeCount())
+                .orElse(0L);
+
+        long redisDislike = likeDislikeCacheService.getDislikeCount(bIdx);
+
+        Map<String, Long> result = Map.of("dislikeCount", dbDislike + redisDislike);
+        log.info("DISLIKE 응답: {}", result);
+        return ResponseEntity.ok(result);
     }
 
     // 유저 닉네임을 반환하는 메서드

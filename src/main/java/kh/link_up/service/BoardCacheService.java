@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +21,9 @@ import java.util.stream.Collectors;
 public class BoardCacheService {
 
     private final BoardRepository boardRepository;
+    private static final String LIKE_PREFIX = "board:like:";
+    private static final String DISLIKE_PREFIX = "board:dislike:";
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Cacheable(value = "noticeBoards", key = "'list'")
     public BoardListDTOWrapper getNoticeBoard() {
@@ -40,4 +44,5 @@ public class BoardCacheService {
     public void clearNoticeBoardCache() {
         log.info("공지사항 캐시 초기화");
     }
+
 }

@@ -1,5 +1,6 @@
 package kh.link_up.controller;
 
+import kh.link_up.converter.CommentConverter;
 import kh.link_up.domain.Comment;
 import kh.link_up.dto.CommentDTO;
 import kh.link_up.service.CommentNotificationSubscriber;
@@ -26,7 +27,7 @@ public class CommentController {
     private final CommentService commentService;
     private final RedisTemplate<String, String> redisTemplate;
     private final CommentNotificationSubscriber notificationSubscriber;
-
+    private final CommentConverter commentConverter;
     // 클라이언트와의 연결을 관리할 Map
     private final Map<String, SseEmitter> clientConnections = new ConcurrentHashMap<>();
 
@@ -51,7 +52,9 @@ public class CommentController {
         log.debug("Redis로 메시지 발송함: {}", notificationMessage);
         redisTemplate.convertAndSend("comment_notifications", notificationMessage);  // Redis로 메시지 발행
 
-        return ResponseEntity.ok().build();
+        CommentDTO commentDTO = commentConverter.convertToDTO(comment);
+        log.info("commentDto : {}", commentDTO);
+        return ResponseEntity.ok(commentDTO);
     }
 
     // 클라이언트에서 SSE 연결 요청 시 호출

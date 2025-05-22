@@ -87,66 +87,62 @@ public class BoardService {
      */
     public void assignWriterAndSaveBoard(Board board, Principal principal, Authentication authentication) {
         boolean isSaved = false;
-        // 일반 로그인 사용자의 경우
-        if (authentication instanceof UsernamePasswordAuthenticationToken) {
-            String nickname = principal.getName(); // 로그인된 사용자 정보
-            log.debug("nickname: {}", nickname);
-            Users writer = usersService.findByNickname(nickname);
 
+        if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            String nickname = principal.getName();
+            log.debug("nickname: {}", nickname);
+
+            Users writer = usersService.findByNickname(nickname);
             if (writer != null) {
-                board.setWriter(writer); // 일반 사용자는 writer 필드에 저장
-                boardRepository.save(board); // 게시글 저장
+                board.setWriter(writer);
+                boardRepository.save(board);
                 isSaved = true;
                 log.debug("일반 사용자 게시글 저장됨");
             } else {
                 log.debug("사용자 정보를 찾을 수 없습니다.");
             }
-            return;
         }
-
-        // 소셜 로그인 사용자의 경우
         else if (authentication instanceof OAuth2AuthenticationToken oauth2Authentication) {
             OAuth2User oAuth2User = oauth2Authentication.getPrincipal();
             log.debug("OAuth2 User: {}", oAuth2User.toString());
 
-//            소셜로그인으로 게시글을 저장하면 오류가 발생하는데
-//            지금 오류가 나는게 소셜유저에 같은 이름이 2개가 있어서 그런듯한데 그럼 이름말고 다른걸로 고려해야된다
-//            작성자 정보가 없어 게시글 저장 실패 :Query did not return a unique result: 2 results were returned
-
-//            OAuth2User에서 속성 정보 가져오기
             Map<String, Object> attributes = oAuth2User.getAttributes();
-            String oAuth2UserEmail = (String) attributes.get("email"); // 이메일 가져오기
+            String oAuth2UserEmail = (String) attributes.get("email");
             log.debug("소셜 로그인 이메일: {}", oAuth2UserEmail);
-//
-//            이메일로 소셜 사용자 조회
+
             SocialUser socialUserEmail = socialUserRepository.findByEmail(oAuth2UserEmail);
             log.debug("게시글 작성 socialUserEmail: {}", socialUserEmail);
 
-            // 소셜 로그인 사용자 정보를 처리하는 방식
-//            String socialId = oAuth2User.getName(); // 예: 소셜 로그인에서 받은 고유 ID
-//            SocialUser socialUser = socialUserRepository.findByName(socialId); // DB에서 해당 소셜 사용자 찾기
-//            log.debug("게시글 작성 socialUser: {}", socialUser);
-
             if (socialUserEmail != null) {
-                board.setSocialUser(socialUserEmail); // 소셜 로그인 사용자는 socialUser 필드에 저장
-                boardRepository.save(board); // 게시글 저장
+                board.setSocialUser(socialUserEmail);
+                boardRepository.save(board);
                 isSaved = true;
                 log.debug("소셜 사용자 게시글 저장됨");
             } else {
                 log.debug("소셜 사용자 정보를 찾을 수 없습니다.");
             }
-            return;
+        }
+        else {
+            log.debug("인증 정보가 잘못되었습니다.");
         }
 
-        // 캐시 삭제
+        // 게시글 저장 성공 시 캐시 삭제 (return 없이 무조건 실행됨)
         if (isSaved && "NOTICE".equalsIgnoreCase(board.getCategory())) {
-            boardCacheService.clearNoticeBoardCache(); // ← 여기서 캐시 무효화
+            boardCacheService.clearNoticeBoardCache();
         }
-        // 로그인 정보가 없거나, 인증 정보가 잘못된 경우 처리
-        log.debug("인증 정보가 잘못되었습니다.");
     }
 
     public void deleteBoard(Long id) {
+        boardRepository.findById(id).ifPresent(board -> {
+            // 공지사항이면 캐시 삭제
+            //equalsIgnoreCase : str1과 str2의 내용이 대소문자 무시하고 같으면 true 반환
+            if ("NOTICE".equalsIgnoreCase(board.getCategory())) {
+                boardCacheService.clearNoticeBoardCache();
+                log.debug("공지사항 삭제됨 - 캐시 무효화 수행");
+            }
+        });
+
+        // 게시글 삭제
         boardRepository.deleteById(id);
     }
 
