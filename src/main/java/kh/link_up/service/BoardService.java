@@ -1,5 +1,6 @@
 package kh.link_up.service;
 
+import jakarta.transaction.Transactional;
 import kh.link_up.converter.BoardConverter;
 import kh.link_up.domain.Board;
 import kh.link_up.domain.SocialUser;
@@ -20,7 +21,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -31,6 +31,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 @Slf4j
+@Transactional
 public class BoardService {
 
     private final BoardRepository boardRepository;
@@ -44,16 +45,6 @@ public class BoardService {
         return boardRepository.findAll(pageable);
     }
 
-    // 게시글 페이징 가져오기 (유저용)
-    public Page<Board> getFilteredBoardsForUser(String selectValue, String text, Pageable pageable) {
-        selectValue = selectValue.trim();
-        text = text.trim();
-
-        // 검색 조건을 한 메소드에서 처리
-        return boardRepository.searchByCriteria(selectValue, text, "INQUIRY", pageable);
-    }
-
-    //일반버전 조회
     public Page<BoardListDTO> getAllPagesBoardsForUsers(String selectValue, String text, Pageable pageable) {
         // 공지사항(NOTICE) 게시글을 먼저 가져옵니다.
         BoardListDTOWrapper noticeBoardWrapper = boardCacheService.getNoticeBoard();  // 이제 BoardListDTOWrapper 객체를 반환
@@ -94,7 +85,6 @@ public class BoardService {
     /**
      * 작성자를 할당하고 게시글을 저장하는 로직
      */
-    @Transactional
     public void assignWriterAndSaveBoard(Board board, Principal principal, Authentication authentication) {
         boolean isSaved = false;
 
@@ -111,12 +101,12 @@ public class BoardService {
             } else {
                 log.debug("사용자 정보를 찾을 수 없습니다.");
             }
-        } else if (authentication instanceof OAuth2AuthenticationToken oauth2Authentication) {
+        }
+        else if (authentication instanceof OAuth2AuthenticationToken oauth2Authentication) {
             OAuth2User oAuth2User = oauth2Authentication.getPrincipal();
             log.debug("OAuth2 User: {}", oAuth2User.toString());
 
             Map<String, Object> attributes = oAuth2User.getAttributes();
-            log.debug("소셜정보 : {}", attributes);
             String oAuth2UserEmail = (String) attributes.get("email");
             log.debug("소셜 로그인 이메일: {}", oAuth2UserEmail);
 
@@ -131,7 +121,8 @@ public class BoardService {
             } else {
                 log.debug("소셜 사용자 정보를 찾을 수 없습니다.");
             }
-        } else {
+        }
+        else {
             log.debug("인증 정보가 잘못되었습니다.");
         }
 
@@ -141,7 +132,6 @@ public class BoardService {
         }
     }
 
-    @Transactional
     public void deleteBoard(Long id) {
         boardRepository.findById(id).ifPresent(board -> {
             // 공지사항이면 캐시 삭제
@@ -156,7 +146,6 @@ public class BoardService {
         boardRepository.deleteById(id);
     }
 
-    @Transactional
     public boolean reportBoard(Long id) {
         Optional<Board> optionalBoard = boardRepository.findById(id);
 
@@ -186,7 +175,6 @@ public class BoardService {
         };
     }
 
-    @Transactional
     // 좋아요 증가 로직
     public void increaseLikeCount(Long bIdx) {
         Board board = boardRepository.findById(bIdx)
@@ -196,7 +184,6 @@ public class BoardService {
     }
 
     // 싫어요 증가 로직
-    @Transactional
     public void increaseDislikeCount(Long bIdx) {
         Board board = boardRepository.findById(bIdx)
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. ID: " + bIdx));
@@ -204,14 +191,20 @@ public class BoardService {
         boardRepository.save(board); // 변경 사항 저장
     }
 
+    // 게시글 페이징 가져오기 (유저용)
+    public Page<Board> getFilteredBoardsForUser(String selectValue, String text, Pageable pageable) {
+        selectValue = selectValue.trim();
+        text = text.trim();
 
-    @Transactional
+        // 검색 조건을 한 메소드에서 처리
+        return boardRepository.searchByCriteria(selectValue, text, "INQUIRY", pageable);
+    }
+
     public Board save(Board board) {
         return boardRepository.save(board);
     }
 
     // 게시글 파일 저장
-    @Transactional
     public void saveFilePath(Long bIdx, String filePath) {
         Board board = boardRepository.findById(bIdx).get();
         if (board != null) {
@@ -223,7 +216,6 @@ public class BoardService {
     }
 
     // 게시글 숨기기 처리 (삭제는 아니고, 숨김 처리만)
-    @Transactional
     public void hideBoard(Long b_idx) {
         Board board = boardRepository.findById(b_idx)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
@@ -232,7 +224,6 @@ public class BoardService {
     }
 
     // 신고 상태 해결 처리 (신고된 게시글 상태를 해결)
-    @Transactional
     public void resolveReport(Long b_idx) {
         Board board = boardRepository.findById(b_idx)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
