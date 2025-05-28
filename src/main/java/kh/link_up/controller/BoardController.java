@@ -69,7 +69,7 @@ public class BoardController {
             // 조건이 맞지 않으면 기본 데이터를 설정할 수 있음 (필요에 따라)
             boardPage = boardService.getAllPagesBoardsForUsers("all", "", pageable); // BoardListDTO를 반환
         }
-
+        log.debug("boardPage : {} ", boardPage.stream().toList());
         // 뷰에 페이징된 게시글 전달
         model.addAttribute("boardPage", boardPage); // BoardListDTO 타입으로 전달
         return "board/list"; // Thymeleaf 템플릿 파일 경로
@@ -203,7 +203,8 @@ public class BoardController {
         // OAuth2User (소셜 로그인 사용자)일 경우
         if (principal instanceof OAuth2AuthenticationToken oauth2Token) {
             OAuth2User oauth2User = oauth2Token.getPrincipal();
-            nickname = oauth2User.getAttribute("name"); // 예시로, name 속성 이름을 사용
+            log.debug(" 유저 닉네임을 반환하는 메서드 oauth2User : {}", oauth2User);
+            nickname = oauth2User.getAttribute("uNickname");
         } else {
             // 일반 로그인 사용자
             Users user = usersService.getUserByNickname(principal.getName());

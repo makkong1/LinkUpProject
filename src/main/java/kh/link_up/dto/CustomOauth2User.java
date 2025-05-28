@@ -2,6 +2,7 @@ package kh.link_up.dto;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Data
+@Slf4j
 public class CustomOauth2User implements OAuth2User {
 
     private final Oauth2Response response;
@@ -23,7 +25,7 @@ public class CustomOauth2User implements OAuth2User {
 
     @Override
     public Map<String, Object> getAttributes() {
-        return Map.of();
+        return Map.of("email", this.uEmail,"uNickname", this.uNickname);
     }
 
     //권한 반환

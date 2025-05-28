@@ -11,8 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Getter
-@Setter
 public class BoardDTO {
     private Long bIdx; // 게시글 고유 ID (b_idx -> bIdx)
     private String bWriter; // 게시글 작성자 ID (b_writer -> bWriter)

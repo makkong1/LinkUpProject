@@ -29,7 +29,7 @@ public class SocialClientRegistration {
 
     public ClientRegistration naverClientRegistration() {
 
-        return ClientRegistration.withRegistrationId("naverClientId")
+        return ClientRegistration.withRegistrationId("naver")
                 .clientId(naverClientId)
                 .clientSecret(naverClientSecret)
                 .redirectUri(naverRedirectUri)
@@ -46,7 +46,7 @@ public class SocialClientRegistration {
     public ClientRegistration googleClientRegistration() {
 
         return ClientRegistration.withRegistrationId("google")
-                .clientId(googleClientSecret)
+                .clientId(googleClientId)
                 .clientSecret(googleClientSecret)
                 .redirectUri(googleRedirectUri)
                 //.redirectUri("https://linkup.com/login/oauth2/code/google")
