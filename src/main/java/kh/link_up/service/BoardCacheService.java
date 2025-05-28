@@ -35,7 +35,7 @@ public class BoardCacheService {
         List<BoardListDTO> boardListDTOs = boards.stream()
                 .map(BoardListDTO::new)
                 .collect(Collectors.toList());
-
+        boardListDTOs.forEach(dto -> log.debug("boardListDTO: {}", dto));
         // BoardListDTOWrapper를 생성하여 반환
         return new BoardListDTOWrapper(boardListDTOs);
     }

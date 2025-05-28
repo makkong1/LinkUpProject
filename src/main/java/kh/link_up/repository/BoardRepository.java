@@ -16,6 +16,25 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     Page<Board> findAll(Pageable pageable);
 
+//    @Query(value = "SELECT b FROM Board b " +
+//            "LEFT JOIN FETCH b.writer " +
+//            "LEFT JOIN FETCH b.socialUser",
+//            countQuery = "SELECT COUNT(b) FROM Board b")
+//    Page<Board> findAllWithUsers(Pageable pageable);
+//
+//    @Query(value = "SELECT b FROM Board b " +
+//            "LEFT JOIN FETCH b.writer " +
+//            "LEFT JOIN FETCH b.socialUser " +
+//            "WHERE (:category = 'all' OR b.category = :category) " +
+//            "AND (:text = '' OR b.title LIKE %:text%)",
+//            countQuery = "SELECT COUNT(b) FROM Board b " +
+//                    "WHERE (:category = 'all' OR b.category = :category) " +
+//                    "AND (:text = '' OR b.title LIKE %:text%)")
+//    Page<Board> findAllBySearch(@Param("category") String category,
+//                                @Param("text") String text,
+//                                Pageable pageable);
+//
+
     // 제목으로 검색 + 페이징 처리
     @Query("SELECT b FROM Board b WHERE REPLACE(b.title, ' ', '') LIKE REPLACE(CONCAT('%', :title, '%'), ' ', '')")
     Page<Board> searchByTitle(@Param("title") String title, Pageable pageable);
@@ -43,10 +62,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
             ORDER BY b.uploadTime DESC
             """)
     Page<Board> searchByCriteria(@Param("selectValue") String selectValue,
-                             @Param("text") String text,
-                             @Param("excludeCategory") String excludeCategory,
-                             Pageable pageable);
-
+                                 @Param("text") String text,
+                                 @Param("excludeCategory") String excludeCategory,
+                                 Pageable pageable);
 
     List<Board> findByCategory(String category);
 

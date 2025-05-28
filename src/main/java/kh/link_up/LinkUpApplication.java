@@ -1,6 +1,5 @@
 package kh.link_up;
 
-import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,7 +15,7 @@ import org.springframework.web.filter.HiddenHttpMethodFilter;
 //@EnableScheduling // 주기적 작업을 활성화
 @EnableAsync
 @EnableCaching
-@EnableAdminServer
+//@EnableAdminServer
 public class LinkUpApplication {
 
 	public static void main(String[] args) {
