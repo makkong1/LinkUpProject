@@ -4,6 +4,7 @@ import kh.link_up.domain.Board;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -15,25 +16,6 @@ import java.util.Optional;
 public interface BoardRepository extends JpaRepository<Board, Long> {
 
     Page<Board> findAll(Pageable pageable);
-
-//    @Query(value = "SELECT b FROM Board b " +
-//            "LEFT JOIN FETCH b.writer " +
-//            "LEFT JOIN FETCH b.socialUser",
-//            countQuery = "SELECT COUNT(b) FROM Board b")
-//    Page<Board> findAllWithUsers(Pageable pageable);
-//
-//    @Query(value = "SELECT b FROM Board b " +
-//            "LEFT JOIN FETCH b.writer " +
-//            "LEFT JOIN FETCH b.socialUser " +
-//            "WHERE (:category = 'all' OR b.category = :category) " +
-//            "AND (:text = '' OR b.title LIKE %:text%)",
-//            countQuery = "SELECT COUNT(b) FROM Board b " +
-//                    "WHERE (:category = 'all' OR b.category = :category) " +
-//                    "AND (:text = '' OR b.title LIKE %:text%)")
-//    Page<Board> findAllBySearch(@Param("category") String category,
-//                                @Param("text") String text,
-//                                Pageable pageable);
-//
 
     // 제목으로 검색 + 페이징 처리
     @Query("SELECT b FROM Board b WHERE REPLACE(b.title, ' ', '') LIKE REPLACE(CONCAT('%', :title, '%'), ' ', '')")
@@ -49,17 +31,18 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     Optional<Board> findById(Long id);
 
+    @EntityGraph(attributePaths = {"writer", "socialUser"})
     Page<Board> findByCategory(String category, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"writer", "socialUser"})
     @Query("""
-            SELECT b FROM Board b 
-            WHERE b.category <> :excludeCategory 
-            AND (
-              (:selectValue = 'title' AND b.title LIKE %:text%) OR 
-              (:selectValue = 'writer' AND b.writer.uNickname LIKE %:text%) OR 
-              (:selectValue = 'content' AND b.content LIKE %:text%)
-            )
-            ORDER BY b.uploadTime DESC
+                SELECT b FROM Board b 
+                WHERE b.category <> :excludeCategory 
+                AND (
+                  (:selectValue = 'title' AND b.title LIKE %:text%) OR 
+                  (:selectValue = 'writer' AND b.writer.uNickname LIKE %:text%) OR 
+                  (:selectValue = 'content' AND b.content LIKE %:text%)
+                )
             """)
     Page<Board> searchByCriteria(@Param("selectValue") String selectValue,
                                  @Param("text") String text,

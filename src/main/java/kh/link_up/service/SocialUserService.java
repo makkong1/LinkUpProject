@@ -30,7 +30,7 @@ public class SocialUserService {
 
         // SocialUser 엔티티를 SocialUserDTO로 변환
         return socialUsers.stream()
-                .map(socialUser -> socialUserConverter.convertToDTO(socialUser)) // 변환
+                .map(socialUserConverter::convertToDTO) // 변환
                 .collect(Collectors.toList());
     }
 

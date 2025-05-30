@@ -27,5 +27,5 @@ public class BoardDTO {
     private List<Comment> comments;
     private List<Board> board;
     private SocialUser socialUser;
-    private int dislikeCount;
+    private Integer dislikeCount;
 }

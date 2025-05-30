@@ -3,8 +3,6 @@ package kh.link_up.service;
 import jakarta.transaction.Transactional;
 import kh.link_up.converter.BoardConverter;
 import kh.link_up.domain.Board;
-import kh.link_up.domain.SocialUser;
-import kh.link_up.domain.Users;
 import kh.link_up.dto.BoardDTO;
 import kh.link_up.dto.BoardListDTO;
 import kh.link_up.dto.BoardListDTOWrapper;
@@ -16,16 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -56,7 +48,7 @@ public class BoardService {
         if ((selectValue != null && !selectValue.equals("all")) || (text != null && !text.isEmpty())) {
             filteredBoards = getFilteredBoardsForUser(selectValue, text, pageable);
         } else {
-            // 'INQUIRY' 카테고리를 제외한 나머지 게시글을 페이징 처리하여 가져옵니다.
+            // 'INQUIRY'(문의) 카테고리를 제외한 나머지 게시글을 페이징 처리하여 가져옵니다.
             filteredBoards = boardRepository.findByCategory("GENERAL", pageable);
         }
 
@@ -82,56 +74,7 @@ public class BoardService {
         return Optional.empty(); // 조회된 게시글 반환
     }
 
-    /**
-     * 작성자를 할당하고 게시글을 저장하는 로직
-     */
-    public void assignWriterAndSaveBoard(Board board, Principal principal, Authentication authentication) {
-        boolean isSaved = false;
-
-        if (authentication instanceof UsernamePasswordAuthenticationToken) {
-            String nickname = principal.getName();
-            log.debug("nickname: {}", nickname);
-
-            Users writer = usersService.findByNickname(nickname);
-            if (writer != null) {
-                board.setWriter(writer);
-                boardRepository.save(board);
-                isSaved = true;
-                log.debug("일반 사용자 게시글 저장됨");
-            } else {
-                log.debug("사용자 정보를 찾을 수 없습니다.");
-            }
-        }
-        else if (authentication instanceof OAuth2AuthenticationToken oauth2Authentication) {
-            OAuth2User oAuth2User = oauth2Authentication.getPrincipal();
-            log.debug("OAuth2 User: {}", oAuth2User.toString());
-
-            Map<String, Object> attributes = oAuth2User.getAttributes();
-            String oAuth2UserEmail = (String) attributes.get("email");
-            log.debug("소셜 로그인 이메일: {}", oAuth2UserEmail);
-
-            SocialUser socialUserEmail = socialUserRepository.findByEmail(oAuth2UserEmail);
-            log.debug("게시글 작성 socialUserEmail: {}", socialUserEmail);
-
-            if (socialUserEmail != null) {
-                board.setSocialUser(socialUserEmail);
-                boardRepository.save(board);
-                isSaved = true;
-                log.debug("소셜 사용자 게시글 저장됨");
-            } else {
-                log.debug("소셜 사용자 정보를 찾을 수 없습니다.");
-            }
-        }
-        else {
-            log.debug("인증 정보가 잘못되었습니다.");
-        }
-
-        // 게시글 저장 성공 시 캐시 삭제 (return 없이 무조건 실행됨)
-        if (isSaved && "NOTICE".equalsIgnoreCase(board.getCategory())) {
-            boardCacheService.clearNoticeBoardCache();
-        }
-    }
-
+    //게시글 삭제
     public void deleteBoard(Long id) {
         boardRepository.findById(id).ifPresent(board -> {
             // 공지사항이면 캐시 삭제
@@ -146,6 +89,7 @@ public class BoardService {
         boardRepository.deleteById(id);
     }
 
+    // 게시글 신고
     public boolean reportBoard(Long id) {
         Optional<Board> optionalBoard = boardRepository.findById(id);
 
@@ -160,6 +104,7 @@ public class BoardService {
         return false; // 해당 게시글이 존재하지 않을 경우 신고 처리 실패
     }
 
+    //
     public Page<Board> getFilteredBoards(String selectValue, String text, Pageable pageable) {
         selectValue = selectValue.trim();
         text = text.trim();
@@ -202,17 +147,6 @@ public class BoardService {
 
     public Board save(Board board) {
         return boardRepository.save(board);
-    }
-
-    // 게시글 파일 저장
-    public void saveFilePath(Long bIdx, String filePath) {
-        Board board = boardRepository.findById(bIdx).get();
-        if (board != null) {
-            board.setFilePath(filePath);
-            boardRepository.save(board);
-        } else {
-            throw new IllegalArgumentException("게시글 파일 저장 오류발생");
-        }
     }
 
     // 게시글 숨기기 처리 (삭제는 아니고, 숨김 처리만)
