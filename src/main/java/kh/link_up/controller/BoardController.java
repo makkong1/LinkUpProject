@@ -1,15 +1,15 @@
 package kh.link_up.controller;
 
 import kh.link_up.domain.Board;
-import kh.link_up.domain.Users;
 import kh.link_up.dto.BoardDTO;
 import kh.link_up.dto.BoardListDTO;
 import kh.link_up.dto.CommentDTO;
 import kh.link_up.repository.BoardRepository;
+import kh.link_up.service.BoardFileService;
 import kh.link_up.service.BoardService;
 import kh.link_up.service.CommentService;
 import kh.link_up.service.LikeDislikeCacheService;
-import kh.link_up.service.UsersService;
+import kh.link_up.util.UserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,21 +20,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Controller
 @RequestMapping(value = { "/board" })
@@ -43,10 +37,11 @@ import java.util.UUID;
 public class BoardController {
 
     private final BoardService boardService;
-    private final UsersService usersService;
     private final CommentService commentService;
     private final LikeDislikeCacheService likeDislikeCacheService;
     private final BoardRepository boardRepository;
+    private final BoardFileService boardFileService;
+    private final UserUtil userUtil;
 
     @GetMapping
     public String list(
@@ -69,7 +64,6 @@ public class BoardController {
             // 조건이 맞지 않으면 기본 데이터를 설정할 수 있음 (필요에 따라)
             boardPage = boardService.getAllPagesBoardsForUsers("all", "", pageable); // BoardListDTO를 반환
         }
-        log.debug("boardPage : {} ", boardPage.stream().toList());
         // 뷰에 페이징된 게시글 전달
         model.addAttribute("boardPage", boardPage); // BoardListDTO 타입으로 전달
         return "board/list"; // Thymeleaf 템플릿 파일 경로
@@ -84,47 +78,38 @@ public class BoardController {
 
     @PostMapping("/save")
     public String create(@ModelAttribute Board board,
-            @RequestParam("files") List<MultipartFile> files,
-            Principal principal, Authentication authentication) {
+                         @RequestParam("files") List<MultipartFile> files,
+                         Principal principal,
+                         Authentication authentication) {
         try {
-            // 작성자를 찾고 게시글 저장하는 로직을 서비스에서 처리
-            boardService.assignWriterAndSaveBoard(board, principal, authentication); // 1. 파일 저장 경로 생성
+            // 1. 작성자 할당 및 게시글 저장
+            boardFileService.assignWriterAndSaveBoard(board, principal, authentication);
 
-            // 닉네임 가져오기: 일반 유저일 경우와 소셜 로그인 유저일 경우 분기
-            String userNickname = getUserNickname(principal); // 유저 닉네임 동적 가져오기
-            String boardTitle = board.getTitle();
-            log.debug("board create userNickname: {}", userNickname);
-            // 게시글 제목에 맞는 디렉토리 경로 생성
-            String baseDir = "D:\\LinkUpFileFolder\\(게시판)" + userNickname + "\\" + boardTitle;
-            createDirectoryIfNotExists(baseDir);
-
-            // 2. 파일 저장
+            // 2. 파일이 존재하는 경우만 처리
             if (files != null && !files.isEmpty()) {
-                for (MultipartFile file : files) {
-                    String uniqueFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-                    String fullPath = baseDir + "\\" + uniqueFilename;
-                    file.transferTo(new File(fullPath));
+                String userNickname = userUtil.getUserNickname(principal);
+                String boardTitle = board.getTitle();
+                log.debug("board create userNickname: {}", userNickname);
 
-                    // 파일 경로를 DB에 저장하는 서비스 메서드 호출
-                    boardService.saveFilePath(board.getBIdx(), uniqueFilename);
-                }
+                // 3. 파일 저장 위임
+                boardFileService.saveFiles(board.getBIdx(), userNickname, boardTitle, files);
             }
+
         } catch (IOException e) {
             log.error("파일 저장 중 오류 발생: {}", e.getMessage(), e);
-            return "redirect:/board"; // 파일 저장 오류가 발생한 경우 게시글 목록 페이지로 리다이렉트
+            return "redirect:/board"; // 파일 저장 오류 시 목록으로
         } catch (Exception e) {
             log.debug("작성자 정보가 없어 게시글 저장 실패 :{}", e.getMessage());
-            return "redirect:/board"; // 작성자 정보가 없으면 게시글 목록 페이지로 리다이렉트
+            return "redirect:/board"; // 작성자 정보 없음 시 목록으로
         }
 
-        return "redirect:/board"; // 게시글 목록으로 리다이렉트
+        return "redirect:/board"; // 성공 시 목록으로
     }
 
     @GetMapping("/{bIdx}")
     public String view(@PathVariable("bIdx") Long id, Model model, Pageable pageable) {
         // 기본적으로 pageable이 전달되지만, 한 페이지에 댓글을 10개씩 보여주도록 설정
-        pageable = PageRequest.of(pageable.getPageNumber(), 10, Sort.by(Sort.Order.desc("cUpload"))); // cUpLoad 기준 내림차순
-                                                                                                      // 정렬
+        pageable = PageRequest.of(pageable.getPageNumber(), 10, Sort.by(Sort.Order.desc("cUpload"))); // cUpLoad 기준 내림차순 정렬
 
         // 게시글 ID로 게시글 조회
         BoardDTO board = boardService.getBoardById(id).orElse(null);
@@ -194,33 +179,6 @@ public class BoardController {
         Map<String, Long> result = Map.of("dislikeCount", dbDislike + redisDislike);
         log.info("DISLIKE 응답: {}", result);
         return ResponseEntity.ok(result);
-    }
-
-    // 유저 닉네임을 반환하는 메서드
-    private String getUserNickname(Principal principal) {
-        String nickname = "";
-
-        // OAuth2User (소셜 로그인 사용자)일 경우
-        if (principal instanceof OAuth2AuthenticationToken oauth2Token) {
-            OAuth2User oauth2User = oauth2Token.getPrincipal();
-            log.debug(" 유저 닉네임을 반환하는 메서드 oauth2User : {}", oauth2User);
-            nickname = oauth2User.getAttribute("uNickname");
-        } else {
-            // 일반 로그인 사용자
-            Users user = usersService.getUserByNickname(principal.getName());
-            nickname = user.getUNickname();
-        }
-
-        return nickname;
-    }
-
-    // 유틸리티 메서드: 디렉토리 생성
-    private void createDirectoryIfNotExists(String dirPath) throws IOException {
-        if (!Files.exists(Paths.get(dirPath))) {
-            Files.createDirectories(Paths.get(dirPath));
-        } else {
-            log.debug("디렉토리 만드는데 오류남 하...");
-        }
     }
 
 }

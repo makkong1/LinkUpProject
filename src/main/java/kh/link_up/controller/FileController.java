@@ -28,6 +28,10 @@ public class FileController {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    // 이 컨트롤러는 노션에서 Ckeditor에 이미지를 업로드하면 자동으로 요청이 보내져서
+    // 그래서 이 클래스를 만듬 
+    // 보드게시글 파일업로드랑은 상관없음 파일업로드라고 해봐야 이미지업로드가 끝이지만
+    
     // Tika 객체를 생성하여 파일 유형을 검증
     // Tika: 파일의 MIME 타입을 분석하여 악성 파일을 식별할 수 있도록 돕는 라이브러리.
     private Tika tika = new Tika();
