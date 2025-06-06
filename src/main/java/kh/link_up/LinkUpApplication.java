@@ -7,6 +7,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.filter.HiddenHttpMethodFilter;
 
 @SpringBootApplication
@@ -16,6 +17,7 @@ import org.springframework.web.filter.HiddenHttpMethodFilter;
 @EnableAsync
 @EnableCaching
 //@EnableAdminServer
+@EnableMethodSecurity(prePostEnabled = true) // @PreAuthorize 작동 활성화
 public class LinkUpApplication {
 
 	public static void main(String[] args) {

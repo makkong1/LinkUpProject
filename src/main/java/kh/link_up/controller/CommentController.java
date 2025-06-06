@@ -1,10 +1,14 @@
 package kh.link_up.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import kh.link_up.converter.CommentConverter;
 import kh.link_up.domain.Comment;
 import kh.link_up.dto.CommentDTO;
 import kh.link_up.service.CommentNotificationSubscriber;
 import kh.link_up.service.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,25 +26,28 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 @RequestMapping("/users")
 @Slf4j
+@Tag(name = "Comment", description = "댓글 관련 API")
 public class CommentController {
 
     private final CommentService commentService;
     private final RedisTemplate<String, String> redisTemplate;
     private final CommentNotificationSubscriber notificationSubscriber;
     private final CommentConverter commentConverter;
-    // 클라이언트와의 연결을 관리할 Map
     private final Map<String, SseEmitter> clientConnections = new ConcurrentHashMap<>();
 
+    @Operation(summary = "댓글 작성", description = "댓글을 작성하고 작성된 댓글 정보를 반환합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "댓글 작성 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 오류로 댓글 작성 실패")
+    })
     @PostMapping("/board/comments")
     public ResponseEntity<?> createComment(@RequestBody CommentDTO commentDto) {
         log.info("댓글작성 들어옴");
         log.info("createComment : {}", commentDto);
 
-        // 댓글 생성
         Comment comment = commentService.createComment(commentDto);
         log.info("comment info :{}", comment);
 
-        // 댓글 작성 완료 후 Redis로 알림 메시지 발행
         String boardTitle = comment.getBoard().getTitle();
         String notificationMessage = String.format(
                 "%s : %s 게시글에 댓글이 달렸습니다. <a href='/board/%d'>게시글로 이동</a>",
@@ -50,25 +57,22 @@ public class CommentController {
         );
 
         log.debug("Redis로 메시지 발송함: {}", notificationMessage);
-        redisTemplate.convertAndSend("comment_notifications", notificationMessage);  // Redis로 메시지 발행
+        redisTemplate.convertAndSend("comment_notifications", notificationMessage);
 
         CommentDTO commentDTO = commentConverter.convertToDTO(comment);
         log.info("commentDto : {}", commentDTO);
         return ResponseEntity.ok(commentDTO);
     }
 
-    // 클라이언트에서 SSE 연결 요청 시 호출
+    @Operation(summary = "SSE 알림 연결", description = "사용자 ID로 SSE 연결을 생성하여 실시간 알림을 받습니다.")
     @GetMapping(value= "/notifications/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter getNotifications(@PathVariable String userId) {
         log.debug("userId : {}", userId);
-        // 새로운 연결을 위한 SseEmitter 생성
         SseEmitter emitter = new SseEmitter(60 * 1000L);
 
-        // 클라이언트 연결 관리
         notificationSubscriber.addClientConnection(userId, emitter);
         log.debug("현재 clientConnections 상태: {}", notificationSubscriber.getClientConnections());
 
-        // 연결 종료 시 클라이언트 연결 제거
         emitter.onCompletion(() -> {
             notificationSubscriber.removeClientConnection(userId);
             log.debug("SseEmitter 연결 완료: userId = {}", userId);
@@ -81,7 +85,11 @@ public class CommentController {
         return emitter;
     }
 
-    // 댓글 삭제
+    @Operation(summary = "댓글 삭제", description = "댓글 ID로 댓글을 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "댓글 삭제 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 오류로 댓글 삭제 실패")
+    })
     @PostMapping("/board/comments/{cIdx}")
     public ResponseEntity<?> deleteComment(@PathVariable Long cIdx) {
         log.info("delete comment cidx : {}", cIdx);
@@ -92,9 +100,14 @@ public class CommentController {
             log.error("삭제중 에러발생 : {}",e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 삭제에 실패했습니다.");
         }
-    };
+    }
 
-    //댓글 신고
+    @Operation(summary = "댓글 신고", description = "댓글 ID로 댓글을 신고합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "신고 성공"),
+            @ApiResponse(responseCode = "404", description = "신고할 댓글을 찾을 수 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류로 신고 실패")
+    })
     @PostMapping("/board/comment/{cIdx}/report")
     public ResponseEntity<?> reportComment(@PathVariable Long cIdx) {
         log.info("신고할 댓글 ID : {}", cIdx);
@@ -108,7 +121,7 @@ public class CommentController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("신고 처리 중 오류 발생");
             }
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());  // 댓글 찾지 못했을 때 예외 처리
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("신고 처리 중 오류가 발생했습니다.");
         }

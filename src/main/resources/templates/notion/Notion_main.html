@@ -1,6 +1,5 @@
-`<!DOCTYPE html>
-<html lang="ko">
-<head>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Notion Page</title>
@@ -31,12 +30,12 @@
 <div th:replace="header :: header(${user})"></div>
 <div id="userId" th:data-username="${isSocial} ? ${user.name} : ${user.uNickname}"></div>
 <header>
-    <h1>My Notion Page</h1>
+    <h1>My Link-Up Page</h1>
 </header>
 <div class="container">
     <div class="notion-list">
-        <h2>My Notions</h2>
-        <button id="newNotionBtn" class="save-btn">New Notion</button>
+        <h2>My Link-Up</h2>
+        <button id="newNotionBtn" class="save-btn">New Link-Up</button>
         <ul id="notionList">
             <li th:each="notion : ${notions}">
                 <a href="javascript:void(0);" class="notion-link" th:data-id="${notion.n_idx}" th:text="${notion.n_title}">Notion Title</a>

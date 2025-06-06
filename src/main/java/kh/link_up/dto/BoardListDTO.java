@@ -38,16 +38,5 @@ public class BoardListDTO implements Serializable {
             this.writerName = "익명 사용자";
         }
     }
-
-//    public BoardListDTO(BoardSearchDto dto) {
-//        this.bIdx = dto.getBIdx();
-//        this.title = dto.getTitle();
-//        this.category = dto.getCategory();
-//        this.writerName = dto.getWriterNickname() != null ? dto.getWriterNickname()
-//                : (dto.getSocialUserName() != null ? dto.getSocialUserName() : "익명 사용자");
-//        this.uploadTime = dto.getUploadTime().toLocalDateTime();
-//        this.viewCount = dto.getViewCount();
-//        this.isDeleted = dto.getIsDeleted();
-//    }
 }
 

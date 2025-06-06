@@ -32,27 +32,6 @@ public class BoardFileService {
     private final BoardCacheService boardCacheService;
     private final UserUtil userUtil;
 
-    public void saveFiles(Long boardId, String userNickname, String boardTitle, List<MultipartFile> files) throws IOException {
-        if (files == null || files.isEmpty()) return;
-
-        String baseDir = "D:\\LinkUpFileFolder\\(게시판)" + userNickname + "\\" + boardTitle;
-        createDirectoryIfNotExists(baseDir);
-
-        for (MultipartFile file : files) {
-            try {
-                String uniqueFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-                String fullPath = baseDir + "\\" + uniqueFilename;
-
-                file.transferTo(new File(fullPath));
-                saveFilePath(boardId, uniqueFilename);
-
-            } catch (IOException e) {
-                log.error("파일 저장 실패: {}", e.getMessage(), e);
-                // 필요하다면 예외 다시 throw해서 컨트롤러에서 처리하게 해도 됨
-            }
-        }
-    }
-
     /**
      * 작성자를 할당하고 게시글을 저장하는 로직
      */
@@ -82,13 +61,17 @@ public class BoardFileService {
             }
         }
 
-        if (isSaved && "NOTICE".equalsIgnoreCase(board.getCategory())) {
-            boardCacheService.clearNoticeBoardCache();
+        if (isSaved) {
+            if ("NOTICE".equalsIgnoreCase(board.getCategory())) {
+                log.info("공지사항 캐시 재등록 시작");
+                boardCacheService.refreshNoticeBoardCache(); // 캐시 초기화 + 재등록
+            }
         }
     }
 
-    // 게시글 파일 저장
+    // 유틸메서드 : 게시글 파일 저장
     public void saveFilePath(Long bIdx, String filePath) {
+
         Board board = boardRepository.findById(bIdx).get();
         if (board != null) {
             board.setFilePath(filePath);
@@ -104,6 +87,33 @@ public class BoardFileService {
             Files.createDirectories(Paths.get(dirPath));
         } else {
             log.debug("디렉토리 만드는데 오류남 하...");
+        }
+    }
+
+    //유틸메서드 : 게시글 폴더 및 이름 저장
+    public void saveFiles(Long boardId, String userNickname, String boardTitle, List<MultipartFile> files) throws IOException {
+        if (files == null || files.isEmpty()) return;
+
+        String baseDir = "D:\\LinkUpFileFolder\\(게시판)" + userNickname + "\\" + boardTitle;
+
+        // 실제 파일이 하나라도 존재하는지 확인
+        boolean hasValidFile = files.stream().anyMatch(file -> !file.isEmpty());
+        if (!hasValidFile) return; // 진짜 파일 없으면 종료
+
+        createDirectoryIfNotExists(baseDir);
+
+        for (MultipartFile file : files) {
+            try {
+                String uniqueFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                String fullPath = baseDir + "\\" + uniqueFilename;
+
+                file.transferTo(new File(fullPath));
+                saveFilePath(boardId, uniqueFilename);
+
+            } catch (IOException e) {
+                log.error("파일 저장 실패: {}", e.getMessage(), e);
+                // 필요하다면 예외 다시 throw해서 컨트롤러에서 처리하게 해도 됨
+            }
         }
     }
 }
