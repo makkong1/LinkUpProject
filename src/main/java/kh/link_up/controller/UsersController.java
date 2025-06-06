@@ -1,8 +1,14 @@
 package kh.link_up.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import kh.link_up.dto.*;
-import kh.link_up.service.*;
+import kh.link_up.dto.NotionDTO;
+import kh.link_up.dto.SocialUserDTO;
+import kh.link_up.dto.UsersDTO;
+import kh.link_up.service.NotionService;
+import kh.link_up.service.SocialUserService;
+import kh.link_up.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,27 +32,32 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/users")
 // RequiredArgsConstructor가 생성자주입을 대신해줌 (lombok 어노테이션임)
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@Tag(name = "Users API", description = "사용자 관련 API")
 public class UsersController {
 
     private final UsersService usersService;
     private final NotionService notionService;
     private final SocialUserService socialUserService;
 
+    @Operation(summary = "로그인 페이지 조회", description = "로그인 화면 뷰를 반환합니다.")
     @GetMapping("/loginP")
     public String loginPage() {
         return "users/login";
     }
 
+    @Operation(summary = "회원가입 페이지 조회", description = "회원가입 화면 뷰를 반환합니다.")
     @GetMapping("/newP")
     public String registerPage() {
         return "users/user_form";
     }
 
-    @RequestMapping("/findPwdP")
+    @Operation(summary = "비밀번호 찾기 페이지 조회", description = "비밀번호 찾기 화면 뷰를 반환합니다.")
+    @GetMapping("/findPwdP")
     public String findPwdP() {
         return "users/findPassword";
     }
 
+    @Operation(summary = "회원가입 처리", description = "유효성 검사를 수행하고 새 사용자를 등록합니다.")
     @PostMapping("/new")
     public String create(
             @Valid @ModelAttribute("user") UsersDTO usersDTO,
@@ -61,6 +72,7 @@ public class UsersController {
         return "redirect:/users";
     }
 
+    @Operation(summary = "노션 페이지 조회", description = "LINKUP 화면 뷰를 반환합니다.")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{uIdx}/notion")
     public String notionP(@PathVariable("uIdx") Long uIdx, Model model) {
@@ -68,7 +80,8 @@ public class UsersController {
         model.addAttribute("notions", notionDTOList);
         return "notion/Notion_main";
     }
-
+    
+    @Operation(summary = "회원정보 수정", description = "회원 정보 수정 화면 뷰를 반환합니다.")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{uIdx}/editP")
     public String userEdit(@PathVariable("uIdx") Long uIdx, Model model) {
@@ -87,6 +100,7 @@ public class UsersController {
         return "redirect:/users/list";
     }
 
+    @Operation(summary = "회원 수정 처리", description = "회원 정보 수정을 합니다.")
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{uIdx}/edit")
     public String userUpdate(
@@ -100,6 +114,7 @@ public class UsersController {
         return "redirect:/users/list";
     }
 
+    @Operation(summary = "회원 삭제 처리", description = "회원 정보를 삭제합니다. 회원탈퇴")
     @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/delete/{uIdx}")
     public String userDelete(@PathVariable("uIdx") Long uIdx) {
@@ -107,6 +122,7 @@ public class UsersController {
         return "redirect:/users/list";
     }
 
+    @Operation(summary = "닉네임 체크", description = "중복 닉네임을 체크합니다.")
     @PostMapping("/new/checkNickname")
     @ResponseBody
     public ResponseEntity<DuplicateCheckResponse> checkNickname(@RequestParam("nickname") String nickname) {
@@ -114,6 +130,7 @@ public class UsersController {
         return ResponseEntity.ok(new DuplicateCheckResponse(isDuplicate, isDuplicate ? "이미 사용 중인 닉네임입니다." : "사용 가능한 닉네임입니다."));
     }
 
+    @Operation(summary = "아이디 체크", description = "중복 아이디를 체크합니다.")
     @PostMapping("/new/checkId")
     @ResponseBody
     public ResponseEntity<DuplicateCheckResponse> checkId(@RequestParam("id") String id) {
@@ -121,6 +138,7 @@ public class UsersController {
         return ResponseEntity.ok(new DuplicateCheckResponse(isDuplicate, isDuplicate ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다."));
     }
 
+    @Operation(summary = "비밀번호 찾기", description = "비밀번호를 찾습니다.")
     @PostMapping("/findPassword")
     public String findPassword(@RequestParam("id") String id, Model model) {
         Optional<String> email = usersService.findEmailById(id);
@@ -140,6 +158,7 @@ public class UsersController {
         }
     }
 
+    @Operation(summary = "이메일 인증번호 체크", description = "이메일로 보낸 인증번호가 맞는지 체크합니다,")
     @PostMapping("/verifyAuthCode")
     public String verifyAuthCode(@RequestParam("id") String id, @RequestParam("authCode") String authCode, Model model) {
         boolean isValidCode = usersService.verifyAuthCode(id, authCode);
@@ -152,6 +171,7 @@ public class UsersController {
         }
     }
 
+    @Operation(summary = "비밀번호 수정", description = "비밀번호 수정을 처리합니다.")
     @PostMapping("/changePassword")
     public String changePassword(@RequestParam("id") String id, @RequestParam("password") String password, Model model) {
         boolean isUpdated = usersService.changePassword(id, password);
@@ -162,8 +182,9 @@ public class UsersController {
             return "users/changePassword";
         }
     }
-    
+
     //활동보기
+    @Operation(summary = "회원 활동 보기", description = "회원 개인의 활동(게시글, LinkUp, 댓글)을 조회합니다.")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{idx}")
     public String userContent(@PathVariable("idx") Long idx,Model model){

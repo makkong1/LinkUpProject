@@ -11,8 +11,9 @@ import java.io.IOException;
 
 @Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint{
-//    **AuthenticationEntryPoint**는 인증되지 않은 사용자가 접근할 때 동작하며 로그인 페이지로 리디렉션하거나 JSON 형식으로 로그인 필요 메시지를 반환합니다.
-    // like 인증인듯?
+//    **AuthenticationEntryPoint**는 인증되지 않은 사용자가 접근할 때 동작하며
+//    로그인 페이지로 리디렉션하거나 JSON 형식으로 로그인 필요 메시지를 반환합니다.
+//    인증 실패 처리
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         log.info("EntryPoint invoked for URI: {}", request.getRequestURI());

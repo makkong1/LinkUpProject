@@ -1,0 +1,11 @@
+# 1. 자바 17 이미지 기반
+FROM openjdk:17
+
+# 2. 빌드된 JAR 경로 (Gradle 기준)
+ARG JAR_FILE=build/libs/*.jar
+
+# 3. JAR 파일을 컨테이너 내부로 복사
+COPY ${JAR_FILE} app.jar
+
+# 4. 실행 명령어 (Spring Boot 앱 실행)
+ENTRYPOINT ["java", "-jar", "/app.jar"]

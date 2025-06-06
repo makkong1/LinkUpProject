@@ -1,5 +1,10 @@
 package kh.link_up.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import kh.link_up.domain.Board;
 import kh.link_up.dto.BoardDTO;
 import kh.link_up.dto.BoardListDTO;
@@ -19,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -34,6 +40,8 @@ import java.util.Map;
 @RequestMapping(value = { "/board" })
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 @Slf4j
+@PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUB_ADMIN')")
+@Tag(name = "Board", description = "게시판 관련 API")
 public class BoardController {
 
     private final BoardService boardService;
@@ -44,6 +52,8 @@ public class BoardController {
     private final UserUtil userUtil;
 
     @GetMapping
+    @PreAuthorize("permitAll()")
+    @Operation(summary = "게시글 목록 조회", description = "검색 조건과 페이징 정보를 받아 게시글 목록을 반환합니다.")
     public String list(
             @RequestParam(value = "select_value", required = false, defaultValue = "all") String selectValue,
             @RequestParam(value = "text", required = false, defaultValue = "") String text,
@@ -71,12 +81,18 @@ public class BoardController {
 
     // 새로운 게시글 작성
     @GetMapping("/new")
+    @Operation(summary = "게시글 작성 폼 조회", description = "새 게시글 작성 폼을 반환합니다.")
     public String createForm(Model model) {
         model.addAttribute("board", new Board());
         return "board/form"; // 게시글 작성 폼
     }
 
     @PostMapping("/save")
+    @Operation(summary = "게시글 저장", description = "새 게시글과 첨부파일을 저장합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "게시글 저장 성공 시 게시글 목록으로 리다이렉트"),
+            @ApiResponse(responseCode = "500", description = "파일 저장 실패 시 게시글 목록으로 리다이렉트", content = @Content)
+    })
     public String create(@ModelAttribute Board board,
                          @RequestParam("files") List<MultipartFile> files,
                          Principal principal,
@@ -107,6 +123,8 @@ public class BoardController {
     }
 
     @GetMapping("/{bIdx}")
+    @PreAuthorize("permitAll()")
+    @Operation(summary = "게시글 상세 조회", description = "게시글 ID로 게시글과 댓글 목록을 조회합니다.")
     public String view(@PathVariable("bIdx") Long id, Model model, Pageable pageable) {
         // 기본적으로 pageable이 전달되지만, 한 페이지에 댓글을 10개씩 보여주도록 설정
         pageable = PageRequest.of(pageable.getPageNumber(), 10, Sort.by(Sort.Order.desc("cUpload"))); // cUpLoad 기준 내림차순 정렬
@@ -125,6 +143,7 @@ public class BoardController {
     }
 
     // 게시글 삭제하기
+    @Operation(summary = "게시글 삭제", description = "게시글 ID로 게시글을 삭제합니다.")
     @DeleteMapping("/{bIdx}")
     public String delete(@PathVariable("bIdx") Long id) {
         boardService.deleteBoard(id);
@@ -133,6 +152,7 @@ public class BoardController {
 
     @PostMapping("/report/{bIdx}")
     @ResponseBody
+    @Operation(summary = "게시글 신고", description = "게시글을 신고합니다.")
     public String boardReport(@PathVariable("bIdx") Long id) {
         log.debug("boardReport id : {}", id);
 
@@ -147,6 +167,7 @@ public class BoardController {
 
     // 좋아요 증가
     @PostMapping("/{bIdx}/like")
+    @Operation(summary = "좋아요 증가", description = "게시글 좋아요 수를 1 증가시킵니다.")
     public ResponseEntity<Map<String, Long>> increaseLikeCount(@PathVariable Long bIdx) {
         // 캐시에 1 증가
         likeDislikeCacheService.increaseLikeCount(bIdx);
@@ -166,6 +187,7 @@ public class BoardController {
     }
 
     // 싫어요 증가
+    @Operation(summary = "싫어요 증가", description = "게시글 싫어요 수를 1 증가시킵니다.")
     @PostMapping("/{bIdx}/dislike")
     public ResponseEntity<Map<String, Long>> increaseDislikeCount(@PathVariable Long bIdx) {
         likeDislikeCacheService.increaseDislikeCount(bIdx);

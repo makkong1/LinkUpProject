@@ -33,13 +33,14 @@
         <tr>
             <td>내용: <span th:text="${board.content}">내용</span></td>
         </tr>
-        <tr>
+        <tr th:if="${board.filePath != null and !#strings.isEmpty(board.filePath)}">
             <td>
                 <!-- 파일 경로에 저장된 이미지 불러오기 -->
-                <img th:src="@{'/file/' + ${board.getBWriter()} + '/' + ${board.getTitle()} + '/' + ${#strings.replace(board.getFilePath(), '\\', '/')}}"
-                    alt="게시글 이미지" />
+                <img th:src="@{'/file/' + ${board.bWriter} + '/' + ${board.title} + '/' + ${#strings.replace(board.filePath, '\\', '/')}}"
+                     alt="게시글 이미지" />
             </td>
         </tr>
+
 
 
         <tr>
