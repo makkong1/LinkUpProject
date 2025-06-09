@@ -14,14 +14,19 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Windows의 경우 "\" 대신 "/" 사용
-        String externalPath = "file:" + uploadDir.replace("\\", "/") + "/";
+        String boardPath = "file:" + uploadDir.replace("\\", "/") + "/(게시판)/";
+        String linkUpPath = "file:" + uploadDir.replace("\\", "/") + "/(LinkUp)/";
 
         // 기존 매핑
         registry.addResourceHandler("/files/**")
-                .addResourceLocations(externalPath);
+                .addResourceLocations(boardPath);
+
+        // ✅ 추가: /file/** 요청도 매핑
+        registry.addResourceHandler("/file/**")
+                .addResourceLocations(boardPath);
 
         // 추가: /notion/images/** 매핑
         registry.addResourceHandler("/notion/images/**")
-                .addResourceLocations(externalPath);
+                .addResourceLocations(linkUpPath);
     }
 }

@@ -68,9 +68,9 @@ public class Board {
     @Builder.Default
     private Integer report = 0; // 신고 수 (기본값 0)
 
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<Comment> comments = new ArrayList<>(); // 해당 게시글의 댓글 리스트
+    private List<Comment> comments = new ArrayList<>();
 
     // 추가된 writerNickname 필드
     @Transient

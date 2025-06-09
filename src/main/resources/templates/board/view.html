@@ -36,13 +36,10 @@
         <tr th:if="${board.filePath != null and !#strings.isEmpty(board.filePath)}">
             <td>
                 <!-- 파일 경로에 저장된 이미지 불러오기 -->
-                <img th:src="@{'/file/' + ${board.bWriter} + '/' + ${board.title} + '/' + ${#strings.replace(board.filePath, '\\', '/')}}"
+                <img th:src="@{'/file/' + ${board.getBWriter()} + '/' + ${board.getTitle()} + '/' + ${#strings.replace(board.getFilePath(), '\\', '/')}}"
                      alt="게시글 이미지" />
             </td>
         </tr>
-
-
-
         <tr>
             <td>조회 수: <span th:text="${board.viewCount}">조회 수</span></td>
         </tr>
@@ -50,10 +47,10 @@
             <td>등록일: <span th:text="${#dates.format(board.uploadTime, 'yyyy-MM-dd HH:mm')}">작성일</span></td>
         </tr>
         <tr>
-            <td>좋아요:<span th:text="${board.likeCount}">좋아요</span></td>
+            <td>좋아요:<span id="likeCount" th:text="${board.likeCount}">좋아요</span></td>
         </tr>
         <tr>
-            <td>싫어요:<span th:text="${board.dislikeCount}">싫어요</span></td>
+            <td>싫어요:<span id="dislikeCount" th:text="${board.dislikeCount}">싫어요</span></td>
         </tr>
         <tr>
             <td>

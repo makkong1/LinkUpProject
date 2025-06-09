@@ -11,6 +11,7 @@ import java.util.List;
 @Mapper
 public interface UserMapper {
 
+    // 흠 이것도 필요하긴한데
     // 전체 사용자 조회 메서드 추가
     @Select("SELECT * FROM users")
     List<Users> getAllUsers();

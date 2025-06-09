@@ -1,6 +1,5 @@
 package kh.link_up.service;
 
-import kh.link_up.domain.Board;
 import kh.link_up.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,7 @@ public class BoardLikeSyncService {
     private final LikeDislikeCacheService cacheService;
     private final BoardRepository boardRepository;
 
-    @Scheduled(fixedRate = 300_000) // 5분마다 실행
+    @Scheduled(fixedRate = 300_000)
     public void syncLikesAndDislikesToDB() {
         log.debug("🟡 [동기화 시작]");
 
@@ -35,28 +34,21 @@ public class BoardLikeSyncService {
                 continue;
             }
 
-            Board board = boardRepository.findById(boardId).orElse(null);
-            if (board == null) {
-                cacheService.resetCounts(boardId); // 존재하지 않는 게시글이므로 정리
-                continue;
-            }
-
             Long likeCount = cacheService.getLikeCount(boardId);
             Long dislikeCount = cacheService.getDislikeCount(boardId);
 
-            if (likeCount > 0) {
-                board.setLikeCount(board.getLikeCount() + likeCount.intValue());
-                log.debug("🟢 좋아요 동기화: boardId={} +{}", boardId, likeCount);
-            }
-            if (dislikeCount > 0) {
-                board.setDislikeCount(board.getDislikeCount() + dislikeCount.intValue());
-                log.debug("🔴 싫어요 동기화: boardId={} +{}", boardId, dislikeCount);
+            if (likeCount == 0 && dislikeCount == 0) {
+                cacheService.resetCounts(boardId);
+                continue;
             }
 
-            boardRepository.save(board);
-            cacheService.resetCounts(boardId); // 캐시 삭제
+            boardRepository.updateLikeDislikeCount(boardId, likeCount.intValue(), dislikeCount.intValue());
+            log.debug("🟢 좋아요/싫어요 동기화: boardId={} +{}/+{}", boardId, likeCount, dislikeCount);
+
+            cacheService.resetCounts(boardId);
         }
 
         log.debug("✅ [동기화 완료]");
     }
+
 }

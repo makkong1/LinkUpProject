@@ -166,41 +166,63 @@ public class BoardController {
     }
 
     // 좋아요 증가
-    @PostMapping("/{bIdx}/like")
     @Operation(summary = "좋아요 증가", description = "게시글 좋아요 수를 1 증가시킵니다.")
+    @PostMapping("/{bIdx}/like")
     public ResponseEntity<Map<String, Long>> increaseLikeCount(@PathVariable Long bIdx) {
-        // 캐시에 1 증가
-        likeDislikeCacheService.increaseLikeCount(bIdx);
+        if (bIdx == null || bIdx <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 게시글 번호입니다.");
+        }
 
-        // DB에서 기존 값 가져오기 (없으면 0)
-        long dbLike = boardRepository.findById(bIdx)
-                .map(board -> (long) board.getLikeCount())
-                .orElse(0L);
+        try {
+            // Redis에 좋아요 수 1 증가
+            likeDislikeCacheService.increaseLikeCount(bIdx);
 
-        // Redis 값 가져오기
-        long redisLike = likeDislikeCacheService.getLikeCount(bIdx);
+            // DB에서 현재 좋아요 수 조회 (필요 최소한)
+            long dbLike = boardRepository.findById(bIdx)
+                    .map(board -> (long) board.getLikeCount())
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
 
-        // 총합 전달
-        Map<String, Long> result = Map.of("likeCount", redisLike + dbLike);
-        log.debug("LIKE 응답 : {}", result);
-        return ResponseEntity.ok(result);
+            // Redis에서 증가된 좋아요 수 가져오기
+            long redisLike = likeDislikeCacheService.getLikeCount(bIdx);
+
+            Map<String, Long> result = Map.of("likeCount", dbLike + redisLike);
+            log.debug("LIKE 응답 : {}", result);
+            return ResponseEntity.ok(result);
+
+        } catch (IllegalArgumentException e) {
+            throw e;  // GlobalExceptionHandler가 처리
+        } catch (Exception e) {
+            log.error("좋아요 증가 중 오류 발생", e);
+            throw new RuntimeException("좋아요 처리 중 오류가 발생했습니다.");
+        }
     }
 
     // 싫어요 증가
     @Operation(summary = "싫어요 증가", description = "게시글 싫어요 수를 1 증가시킵니다.")
     @PostMapping("/{bIdx}/dislike")
     public ResponseEntity<Map<String, Long>> increaseDislikeCount(@PathVariable Long bIdx) {
-        likeDislikeCacheService.increaseDislikeCount(bIdx);
+        if (bIdx == null || bIdx <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 게시글 번호입니다.");
+        }
 
-        long dbDislike = boardRepository.findById(bIdx)
-                .map(board -> (long) board.getDislikeCount())
-                .orElse(0L);
+        try {
+            likeDislikeCacheService.increaseDislikeCount(bIdx);
 
-        long redisDislike = likeDislikeCacheService.getDislikeCount(bIdx);
+            long dbDislike = boardRepository.findById(bIdx)
+                    .map(board -> (long) board.getDislikeCount())
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
 
-        Map<String, Long> result = Map.of("dislikeCount", dbDislike + redisDislike);
-        log.info("DISLIKE 응답: {}", result);
-        return ResponseEntity.ok(result);
+            long redisDislike = likeDislikeCacheService.getDislikeCount(bIdx);
+
+            Map<String, Long> result = Map.of("dislikeCount", dbDislike + redisDislike);
+            log.info("DISLIKE 응답: {}", result);
+            return ResponseEntity.ok(result);
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("싫어요 증가 중 오류 발생", e);
+            throw new RuntimeException("싫어요 처리 중 오류가 발생했습니다.");
+        }
     }
-
 }

@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/users/logout",
                                 "/oauth2/**",
                                 "/file/**",
+                                "/files/**",
                                 "/notion/image", // 노션파일
                                 "/js/**",
                                 "/actuator/**",

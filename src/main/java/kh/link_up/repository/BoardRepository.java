@@ -6,8 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +50,11 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
                                  @Param("text") String text,
                                  @Param("excludeCategory") String excludeCategory,
                                  Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Board b SET b.likeCount = b.likeCount + :likeCount, b.dislikeCount = b.dislikeCount + :dislikeCount WHERE b.bIdx = :boardId")
+    int updateLikeDislikeCount(Long boardId, int likeCount, int dislikeCount);
 
     List<Board> findByCategory(String category);
 
