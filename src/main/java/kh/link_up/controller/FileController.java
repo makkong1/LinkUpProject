@@ -38,12 +38,12 @@ public class FileController {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    private Tika tika = new Tika();
+    private final Tika tika = new Tika();
 
     private static final String[] ALLOWED_IMAGE_TYPES = {"image/gif", "image/jpeg", "image/png"};
 
-    @Operation(summary = "LinkUp 이미지 파일 조회",
-            description = "LinkUp에 첨부된 이미지 파일을 닉네임, 게시글 제목, 파일명으로 조회합니다.",
+    @Operation(summary = "게시글 이미지 파일 조회",
+            description = "게시글에 첨부된 이미지 파일을 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "파일 조회 성공", content = @Content(mediaType = "image/*")),
                     @ApiResponse(responseCode = "400", description = "허용되지 않은 파일 형식"),
@@ -51,10 +51,10 @@ public class FileController {
                     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
             })
     @GetMapping("/file/{nickname}/{postTitle}/{filename}")
-    public ResponseEntity<Resource> getImage(
-            @Parameter(description = "유저 닉네임", example = "johnDoe") @PathVariable String nickname,
-            @Parameter(description = "게시글 제목", example = "spring-boot-guide") @PathVariable String postTitle,
-            @Parameter(description = "파일 이름", example = "image.png") @PathVariable String filename) {
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Resource> getImage(@PathVariable String nickname,
+                                             @PathVariable String postTitle,
+                                             @PathVariable String filename) {
 
         log.debug("nickname : {}, postTitle : {}, filename : {}", nickname, postTitle, filename);
         String modifiedNickname = "(게시판)" + nickname;
@@ -80,7 +80,7 @@ public class FileController {
             return ResponseEntity.status(500).body(null);
         }
 
-        return ResponseEntity.ok().contentType(MediaType.parseMediaType("image/*")).body(resource);
+        return ResponseEntity.ok().body(resource);
     }
 
     private boolean isAllowedImageType(String mimeType) {
@@ -100,8 +100,7 @@ public class FileController {
                     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
             })
     @PostMapping("/notion/image")
-    public ResponseEntity<String> uploadNotionImage(
-            @Parameter(description = "업로드할 이미지 파일") @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadNotionImage(@RequestParam("file") MultipartFile file) {
 
         String nickname = SecurityContextHolder.getContext().getAuthentication().getName();
         log.debug("nickname : {}", nickname);
@@ -183,8 +182,7 @@ public class FileController {
                     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
             })
     @GetMapping("/notion/images/{filename}")
-    public ResponseEntity<Resource> getNotionImage(
-            @Parameter(description = "조회할 파일 이름", example = "uuid-filename.png") @PathVariable String filename) {
+    public ResponseEntity<Resource> getNotionImage(@PathVariable String filename) {
 
         String nickname = SecurityContextHolder.getContext().getAuthentication().getName();
         String targetDir = Paths.get(uploadDir, "(LinkUp)" + nickname, filename).toString();

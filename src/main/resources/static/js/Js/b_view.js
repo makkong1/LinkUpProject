@@ -1,18 +1,18 @@
 // 공통 error 처리 함수
-//function handleError(xhr, status, error) {
-//  if (xhr.status === 401) {
-//    let redirectLoginP = confirm("로그인이 필요합니다. 로그인화면으로 가시겠습니까?");
-//    if (redirectLoginP) {
-//      window.location.href = "/users/loginP"; // 로그인 페이지로 리디렉션
-//    }
-//  } else if (xhr.status === 403) {
-//    // 권한 부족 시 403 응답을 받으면 권한 없음 메시지 표시
-//    alert("접근 권한이 없습니다.");
-//  } else {
-//    console.log("Error: " + error);
-//    alert("요청 처리에 실패했습니다.");
-//  }
-//}
+function handleError(xhr, status, error) {
+  if (xhr.status === 401) {
+    let redirectLoginP = confirm("로그인이 필요합니다. 로그인화면으로 가시겠습니까?");
+    if (redirectLoginP) {
+      window.location.href = "/users/loginP"; // 로그인 페이지로 리디렉션
+    }
+  } else if (xhr.status === 403) {
+    // 권한 부족 시 403 응답을 받으면 권한 없음 메시지 표시
+    alert("접근 권한이 없습니다.");
+  } else {
+    console.log("Error: " + error);
+    alert("요청 처리에 실패했습니다.");
+  }
+}
 
 document.addEventListener("DOMContentLoaded", function () {
   const userId = $("#userId").data("username"); // HTML에서 userId를 가져온다고 가정
@@ -77,6 +77,11 @@ $(document).ready(function () {
 // 좋아요 증가
 $(document).on("click", "#likeButton", function () {
   const boardId = $(this).data("board-id");
+  const $likeCount = $("#likeCount");
+  const currentCount = parseInt($likeCount.text() || "0");
+
+  // UI 즉시 증가
+  $likeCount.text(currentCount + 1);
 
   $.ajax({
     url: "/board/" + boardId + "/like",
@@ -93,6 +98,12 @@ $(document).on("click", "#likeButton", function () {
 // 싫어요 증가
 $(document).on("click", "#dislikeButton", function () {
   const boardId = $(this).data("board-id");
+  const $dislikeCount = $("#dislikeCount");
+  const currentCount = parseInt($dislikeCount.text() || "0");
+
+  // UI 즉시 증가
+  $dislikeCount.text(currentCount + 1);
+
 
   $.ajax({
     url: "/board/" + boardId + "/dislike",
