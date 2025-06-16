@@ -119,7 +119,7 @@ public class BoardController {
             return "redirect:/board"; // 작성자 정보 없음 시 목록으로
         }
 
-        return "redirect:/board"; // 성공 시 목록으로
+        return "redirect:/board"; // 성공 시 목록으로 가가
     }
 
     @GetMapping("/{bIdx}")
@@ -138,6 +138,8 @@ public class BoardController {
         // 모델에 데이터 담기
         model.addAttribute("comments", commentsByBoard);
         model.addAttribute("board", board);
+
+        boardService.increaseViewCount(id);
 
         return "board/view"; // 게시글 상세 보기
     }

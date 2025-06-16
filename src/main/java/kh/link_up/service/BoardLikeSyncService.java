@@ -21,6 +21,8 @@ public class BoardLikeSyncService {
         log.debug("🟡 [동기화 시작]");
 
         Set<Object> boardIdObjects = cacheService.getChangedBoardIds();
+        log.info("보드 좋아요,싫어요 캐쉬 id : {}", boardIdObjects);
+
         if (boardIdObjects == null || boardIdObjects.isEmpty()) {
             log.debug("⚪ 동기화 대상 없음");
             return;

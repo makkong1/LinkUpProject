@@ -41,7 +41,7 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
 
         // 소셜 로그인 제공자를 확인합니다.
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        log.debug("registrationId: {}", registrationId);
+        log.debug("social registrationId: {}", registrationId);
 
         Oauth2Response oAuth2Response = null;
 

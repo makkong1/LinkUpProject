@@ -1,11 +1,12 @@
 package kh.link_up.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,48 +77,11 @@ public class Board {
     @Transient
     private String writerNickname; // 임시 필드, 엔티티에는 저장되지 않음
 
-    public String getFileName() {
-        if (filePath == null || filePath.isEmpty()) {
-            return "파일 경로가 유효하지 않습니다."; // null이나 빈 문자열일 때 반환할 값
-        }
-
-        Path path = Paths.get(filePath);
-
-        if (path.getFileName() == null) {
-            return "파일명이 존재하지 않습니다."; // 경로에 파일명이 없을 때
-        }
-
-        return path.getFileName().toString(); // 파일명만 반환
-    }
-
-
-    public void incrementViewCount(boolean resetToZero) {
-        if (resetToZero) {
-            this.viewCount = 0; // 0으로 초기화
-        } else {
-            this.viewCount += 1; // 1 증가
-        }
-    }
-
     public void incrementBoardReport(boolean resetToZero) {
         if (resetToZero) {
             this.report = 0; // 0으로 초기화
         } else {
             this.report += 1; // 1 증가
-        }
-    }
-
-    // 좋아요 증가 메서드
-    public void increaseLikeCount() {
-        if (this.likeCount >= 0) {
-            this.likeCount++;
-        }
-    }
-
-    // 싫어요 감소 메서드
-    public void decreaseDislikeCount() {
-        if (this.dislikeCount >= 0) {
-            this.dislikeCount++;
         }
     }
 

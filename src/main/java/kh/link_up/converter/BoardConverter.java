@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 @Component
 public class BoardConverter implements EntitiyConverter<Board, BoardDTO> {
 
+    // n+1 발생
+    
     public List<BoardDTO> convertList(List<Board> boardList) {
         return boardList.stream()
                 .map(this::convertToDTO) // 개별 Board 객체를 BoardDTO로 변환
