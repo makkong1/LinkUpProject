@@ -1,20 +1,20 @@
 package kh.link_up.service;
 
-import jakarta.transaction.Transactional;
 import kh.link_up.converter.BoardConverter;
 import kh.link_up.domain.Board;
 import kh.link_up.dto.BoardDTO;
 import kh.link_up.dto.BoardListDTO;
 import kh.link_up.dto.BoardListDTOWrapper;
 import kh.link_up.repository.BoardRepository;
-import kh.link_up.repository.SocialUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +28,6 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final BoardConverter boardConverter;
-    private final UsersService usersService;
-    private final SocialUserRepository socialUserRepository;
     private final BoardCacheService boardCacheService;
 
     // 전체 게시물을 페이징 처리하여 가져오는 메서드 (관리자 전용)
@@ -60,18 +58,19 @@ public class BoardService {
         return new PageImpl<>(allBoards, pageable, filteredBoards.getTotalElements() + noticeBoards.size());
     }
 
+
+    // 게시글  조회 메서드
+    @Transactional(readOnly = true)
     public Optional<BoardDTO> getBoardById(Long id) {
-        Optional<Board> optionalBoard = boardRepository.findById(id);
+        return boardRepository.findById(id)
+                .map(board -> boardConverter.convertToDTO(board));
+    }
 
-        if (optionalBoard.isPresent()) {
-            Board board = optionalBoard.get();
-            log.info("헤헷 filePath : {}, fileName : {}", board.getFilePath(), board.getFileName());
-            board.incrementViewCount(false); // 조회수 증가
-            boardRepository.save(board); // 변경된 조회수 저장
-            return Optional.of(boardConverter.convertToDTO(board));
-        }
-
-        return Optional.empty(); // 조회된 게시글 반환
+    // 비동기로 게시글 조회수 증가 처리
+    @Async
+    @Transactional
+    public void increaseViewCount(Long id) {
+        boardRepository.incrementViewCount(id);
     }
 
     //게시글 삭제
@@ -90,6 +89,7 @@ public class BoardService {
     }
 
     // 게시글 신고
+    @Transactional
     public boolean reportBoard(Long id) {
         Optional<Board> optionalBoard = boardRepository.findById(id);
 
@@ -104,7 +104,7 @@ public class BoardService {
         return false; // 해당 게시글이 존재하지 않을 경우 신고 처리 실패
     }
 
-    //
+    // 게시글 검색 조건
     public Page<Board> getFilteredBoards(String selectValue, String text, Pageable pageable) {
         selectValue = selectValue.trim();
         text = text.trim();
@@ -118,22 +118,6 @@ public class BoardService {
 
             default -> boardRepository.findAll(pageable);
         };
-    }
-
-    // 좋아요 증가 로직
-    public void increaseLikeCount(Long bIdx) {
-        Board board = boardRepository.findById(bIdx)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. ID: " + bIdx));
-        board.increaseLikeCount();
-        boardRepository.save(board); // 변경 사항 저장
-    }
-
-    // 싫어요 증가 로직
-    public void increaseDislikeCount(Long bIdx) {
-        Board board = boardRepository.findById(bIdx)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. ID: " + bIdx));
-        board.decreaseDislikeCount();
-        boardRepository.save(board); // 변경 사항 저장
     }
 
     // 게시글 페이징 가져오기 (유저용)

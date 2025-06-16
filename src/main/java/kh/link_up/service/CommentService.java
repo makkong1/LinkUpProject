@@ -74,20 +74,21 @@ public class CommentService {
                 maskedName = maskName(comment.getWriter().getUNickname());
             }
             commentDTO.setC_writer(maskedName);
-
+            log.info("maskName : {}", maskedName);
             return commentDTO;
         });
 
         return commentDTOPage;
     }
 
-    //소셜유저 이름이 그대로 보여서 일단 만듬 문제는 이렇게함녀 아마 그 일반유저이름도 그대로 안보일듯
+    //소셜유저 이름이 그대로 보여서 일단 만듬 문제는 이렇게하면 아마 그 일반유저이름도 그대로 안보일듯
     public String maskName(String name) {
         if (name == null || name.length() <= 1) {
             return name;  // 이름이 1자 이하라면 그대로 반환
         }
 
         // 첫 글자만 남기고 나머지는 '*'로 변경
+
         return name.charAt(0) + "*".repeat(name.length() - 1);
     }
 

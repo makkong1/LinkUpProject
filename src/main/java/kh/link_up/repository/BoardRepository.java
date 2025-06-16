@@ -33,6 +33,10 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     Optional<Board> findById(Long id);
 
+    @Modifying
+    @Query("update Board b set b.viewCount = b.viewCount + 1 where b.id = :id")
+    int incrementViewCount(@Param("id") Long id);
+
     @EntityGraph(attributePaths = {"writer", "socialUser"})
     Page<Board> findByCategory(String category, Pageable pageable);
 
