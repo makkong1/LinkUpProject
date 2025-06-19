@@ -10,14 +10,17 @@ import kh.link_up.repository.BoardRepository;
 import kh.link_up.repository.CommentRepository;
 import kh.link_up.repository.SocialUserRepository;
 import kh.link_up.repository.UsersRepository;
+import kh.link_up.util.UserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -31,29 +34,32 @@ public class CommentService {
     private final CommentConverter commentConverter;
     private final BoardRepository boardRepository;
     private final SocialUserRepository socialUserRepository;
+    private final UserUtil userUtil;
 
     @Transactional
-    public Comment createComment(CommentDTO commentRequestDto) {
-        log.info("idx : {}", commentRequestDto); // commentRequestDto.getC_writer()는 String 타입임
+    public Comment createComment(CommentDTO commentRequestDto, Principal principal, Authentication authentication) {
+        log.info("idx : {}", commentRequestDto);
 
         Board board = boardRepository.findById(commentRequestDto.getB_idx())
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글(idx: " + commentRequestDto.getB_idx() + ")을 찾을 수 없습니다."));
 
-        Users writer = usersRepository.findById(commentRequestDto.getC_writer()).orElse(null);
+        // 1. 로그인한 사용자 정보 가져오기
+        String nicknameOrEmail = userUtil.getUserIdentifier(principal, authentication); // 닉네임 or 이메일
+        String displayName = userUtil.getUserNickname(principal); // 보여줄 이름 (닉네임)
 
+        Users writer = usersRepository.findByuNickname(nicknameOrEmail);  // 일반 사용자 기준
         SocialUser socialUser = null;
 
-        // 일반 사용자로 찾지 못했을 경우 소셜 사용자로 찾기
         if (writer == null) {
-            socialUser = socialUserRepository.findByEmail(commentRequestDto.getUEmail());
+            socialUser = socialUserRepository.findByEmail(nicknameOrEmail);
         }
 
         Comment comment = Comment.builder()
                 .writer(writer)
-                .socialUser(socialUser)  // 소셜 사용자일 경우
+                .socialUser(socialUser)
                 .cContent(commentRequestDto.getC_content())
-                .cUsername(writer != null ? writer.getUUsername() : socialUser.getName())  // 일반 사용자 또는 소셜 사용자 이름 설정
-                .board(board)  // 게시글 연결
+                .cUsername(displayName)  // 유틸에서 가져온 닉네임
+                .board(board)
                 .build();
 
         return commentRepository.save(comment);

@@ -16,11 +16,11 @@ public class CommentDTO {
     private String c_writer;
     private String c_content;
     private String c_username;
-    private Integer c_like;
     private Long b_idx;
     private java.sql.Timestamp c_upLoad;
     private boolean c_deleted = false;
-    private int c_dislike;
+    private Integer c_like;
+    private Integer c_dislike;
     private int c_report;
     private SocialUser socialUser;
 
