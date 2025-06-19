@@ -1,14 +1,16 @@
 package kh.link_up.controller;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import kh.link_up.converter.CommentConverter;
-import kh.link_up.domain.Comment;
-import kh.link_up.dto.CommentDTO;
-import kh.link_up.service.CommentNotificationSubscriber;
-import kh.link_up.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import kh.link_up.converter.CommentConverter;
+import kh.link_up.domain.Comment;
+import kh.link_up.domain.TargetType;
+import kh.link_up.dto.CommentDTO;
+import kh.link_up.service.CommentNotificationSubscriber;
+import kh.link_up.service.CommentService;
+import kh.link_up.util.LikeDislikeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +18,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +36,7 @@ public class CommentController {
 
     private final CommentService commentService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final LikeDislikeUtil likeDislikeUtil;
     private final CommentNotificationSubscriber notificationSubscriber;
     private final CommentConverter commentConverter;
     private final Map<String, SseEmitter> clientConnections = new ConcurrentHashMap<>();
@@ -40,12 +46,14 @@ public class CommentController {
             @ApiResponse(responseCode = "200", description = "댓글 작성 성공"),
             @ApiResponse(responseCode = "500", description = "서버 오류로 댓글 작성 실패")
     })
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUB_ADMIN')")
     @PostMapping("/board/comments")
-    public ResponseEntity<?> createComment(@RequestBody CommentDTO commentDto) {
+    public ResponseEntity<?> createComment(@RequestBody CommentDTO commentDto,  Principal principal,
+                                           Authentication authentication) {
         log.info("댓글작성 들어옴");
         log.info("createComment : {}", commentDto);
 
-        Comment comment = commentService.createComment(commentDto);
+        Comment comment = commentService.createComment(commentDto, principal, authentication);
         log.info("comment info :{}", comment);
 
         String boardTitle = comment.getBoard().getTitle();
@@ -56,6 +64,7 @@ public class CommentController {
                 comment.getBoard().getBIdx()
         );
 
+        // Redis Pub/Sub으로 발행 (comment_notifications 채널)
         log.debug("Redis로 메시지 발송함: {}", notificationMessage);
         redisTemplate.convertAndSend("comment_notifications", notificationMessage);
 
@@ -91,6 +100,7 @@ public class CommentController {
             @ApiResponse(responseCode = "500", description = "서버 오류로 댓글 삭제 실패")
     })
     @PostMapping("/board/comments/{cIdx}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUB_ADMIN')")
     public ResponseEntity<?> deleteComment(@PathVariable Long cIdx) {
         log.info("delete comment cidx : {}", cIdx);
         try {
@@ -109,6 +119,7 @@ public class CommentController {
             @ApiResponse(responseCode = "500", description = "서버 오류로 신고 실패")
     })
     @PostMapping("/board/comment/{cIdx}/report")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUB_ADMIN')")
     public ResponseEntity<?> reportComment(@PathVariable Long cIdx) {
         log.info("신고할 댓글 ID : {}", cIdx);
 
@@ -126,4 +137,21 @@ public class CommentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("신고 처리 중 오류가 발생했습니다.");
         }
     }
+
+    // 댓글 좋아요
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUB_ADMIN')")
+    @Operation(summary = "댓글 좋아요 카운트", description = "댓글 ID로 댓글 좋아요가 증가합니다.")
+    @PostMapping("/comment/{commentId}/like")
+    public ResponseEntity<Map<String, Long>> increaseCommentLike(@PathVariable Long commentId) {
+        return likeDislikeUtil.likeDislikeprocess(TargetType.COMMENT, commentId, true);
+    }
+
+    // 댓글 싫어요
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUB_ADMIN')")
+    @Operation(summary = "댓글 싫어요 카운트", description = "댓글 ID로 댓글 싫어요가 증가합니다.")
+    @PostMapping("/comment/{commentId}/dislike")
+    public ResponseEntity<Map<String, Long>> increaseCommentDislike(@PathVariable Long commentId) {
+        return likeDislikeUtil.likeDislikeprocess(TargetType.COMMENT, commentId, false);
+    }
+
 }
