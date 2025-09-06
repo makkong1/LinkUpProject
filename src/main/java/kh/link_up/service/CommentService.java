@@ -71,16 +71,22 @@ public class CommentService {
         Page<CommentDTO> commentDTOPage = commentPage.map(comment -> {
             CommentDTO commentDTO = commentConverter.convertToDTO(comment);
 
+            String originalName;
             String maskedName;
+
             if (comment.getSocialUser() != null) {
-                // 소셜 유저일 경우 소셜 유저의 이름을 마스킹
-                maskedName = maskName(comment.getSocialUser().getName());
+                originalName = comment.getSocialUser().getName();
+                maskedName = maskName(originalName);
             } else {
-                // 일반 유저일 경우 유저 닉네임을 마스킹
-                maskedName = maskName(comment.getWriter().getUNickname());
+                originalName = comment.getWriter().getUNickname();
+                maskedName = maskName(originalName);
             }
+
             commentDTO.setC_writer(maskedName);
-            log.info("maskName : {}", maskedName);
+
+            // ✅ 로그 추가
+            log.info("댓글 작성자 원본 이름: {}, 마스킹된 이름: {}", originalName, maskedName);
+
             return commentDTO;
         });
 
