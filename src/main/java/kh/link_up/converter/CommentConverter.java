@@ -2,12 +2,14 @@ package kh.link_up.converter;
 
 import kh.link_up.domain.Comment;
 import kh.link_up.dto.CommentDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class CommentConverter implements EntitiyConverter<Comment, CommentDTO> {
 
     @Override
@@ -22,16 +24,21 @@ public class CommentConverter implements EntitiyConverter<Comment, CommentDTO> {
 
         if (entity.getWriter() != null) {
             writerName = entity.getWriter().getUNickname();  // 일반 사용자 닉네임
+            log.info("일반 댓글작성자이름 : {}", writerName);
+
         } else if (entity.getSocialUser() != null) {
             writerName = entity.getSocialUser().getName();    // 소셜 사용자 이름
             uEmail = entity.getSocialUser().getEmail();      // 소셜 사용자 이메일
+            log.info("소셜 댓글 작성자 이름 : {}", writerName);
+            log.info("소셜 댓글 작성자 이메일 : {}", uEmail);
+
         }
 
         return CommentDTO.builder()
                 .c_idx(entity.getCIdx())
                 .c_writer(writerName)
                 .c_content(entity.getCContent())
-                .c_username(entity.getCUsername())
+//                .c_username(entity.getCUsername())
                 .c_like(entity.getCLike())
                 .c_upLoad(entity.getCUpload())
                 .c_deleted(entity.isCDeleted())
@@ -52,7 +59,7 @@ public class CommentConverter implements EntitiyConverter<Comment, CommentDTO> {
         return Comment.builder()
                 .cIdx(dto.getC_idx())
                 .cContent(dto.getC_content())
-                .cUsername(dto.getC_username())
+//                .cUsername(dto.getC_username())
                 .cLike(dto.getC_like() != null ? dto.getC_like() : 0)
                 .cUpload(dto.getC_upLoad())
                 .cDeleted(dto.isC_deleted())
