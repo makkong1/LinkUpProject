@@ -24,5 +24,4 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query("select c from Comment c where c.cReport >= 1")
     Page<Comment> findReportComment(Pageable pageable);
-
 }
