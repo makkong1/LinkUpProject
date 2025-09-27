@@ -65,7 +65,7 @@ public record CustomUserDetails(Users user) implements UserDetails, Serializable
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // 계정 잠금 여부 (true: 잠금되지 않음)
+        return !user.isAccountLocked(); // 계정 잠금 여부 (true: 잠금되지 않음)
     }
 
     @Override

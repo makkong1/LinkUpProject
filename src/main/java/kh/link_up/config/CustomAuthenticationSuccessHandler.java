@@ -1,6 +1,5 @@
 package kh.link_up.config;
 
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +16,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 @Slf4j
@@ -33,12 +31,12 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         this.usersRepository = usersRepository;
     }
 
-    @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        FilterChain chain, Authentication authentication) throws IOException, ServletException {
-        // 인증 성공시 처리
-        onAuthenticationSuccess(request, response, authentication);
-    }
+//    @Override
+//    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+//                                        FilterChain chain, Authentication authentication) throws IOException, ServletException {
+//        // 인증 성공시 처리
+//        onAuthenticationSuccess(request, response, authentication);
+//    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -50,6 +48,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         log.debug("username: {}", username);
         log.debug("role: {}", role);
         log.debug("인증된 사용자 세션정보 : {}", SecurityContextHolder.getContext().getAuthentication().getName());
+
         // 사용자 정보 조회
         Users user = usersRepository.findById(username).orElse(null);
         log.info("user lock : {}", user != null ? user.isAccountLocked() : "null");
@@ -78,7 +77,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             if (authorizedClient != null) {
                 // OAuth2AccessToken을 가져옵니다.
                 OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
-                log.debug("Access token: {}", accessToken.getTokenValue());
+                log.debug("Oauth2 Access token: {}", accessToken.getTokenValue());
                 if (accessToken != null) {
                     // Access Token 로그 찍기
                     log.info("Access Token: {}", accessToken.getTokenValue());
@@ -98,20 +97,18 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         // 로그인 성공 시 사용자 정보 업데이트: 로그인 실패 횟수 초기화 및 계정 잠금 해제
-        Optional<Users> optionalUser = usersRepository.findById(username);
-        log.debug("User: {}", optionalUser);
-        if (optionalUser.isPresent()) {
-            Users userToUpdate = optionalUser.get();
+        if (user.isAccountLocked()) {
 
             // 로그인 실패 횟수 초기화
-            userToUpdate.setFailedLoginAttempts(0);
+            user.setFailedLoginAttempts(0);
             // 계정 잠금 해제
-            userToUpdate.setAccountLocked(false);
+            user.setAccountLocked(false);
 
             // 변경된 사용자 정보 저장
-            usersRepository.save(userToUpdate);
+            usersRepository.save(user);
 
-            log.debug("로그인성공 시도횟수 및 잠금상태 초기화 /  {}. ", username);
+            log.debug("로그인성공 시도횟수 및 잠금상태 초기화 /  {}. ", username, user.isAccountLocked(), user.getFailedLoginAttempts());
+
         } else {
             log.warn("유저 없음: {}", username);
         }

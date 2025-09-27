@@ -41,15 +41,17 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
 
         // 소셜 로그인 제공자를 확인합니다.
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        log.debug("registrationId: {}", registrationId);
+        log.debug("social registrationId: {}", registrationId);
 
         Oauth2Response oAuth2Response = null;
 
         // 소셜 로그인 제공자에 따른 response 객체 생성
         if (registrationId.equals("naver")) {
             oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
+            log.debug("naver oAuth2Response :{}", oAuth2Response);
         } else if (registrationId.equals("google")) {
             oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
+            log.debug("google oAuth2Response :{}", oAuth2Response);
         } else {
             return null; // 알 수 없는 제공자 처리
         }

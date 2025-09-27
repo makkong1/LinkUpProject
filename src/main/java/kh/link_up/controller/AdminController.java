@@ -1,5 +1,7 @@
 package kh.link_up.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import kh.link_up.domain.Board;
 import kh.link_up.domain.Users;
 import kh.link_up.dto.CommentDTO;
@@ -31,6 +33,7 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/admin") // 어드민 기본 경로
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@Tag(name = "Admin", description = "관리자 관련 API (사용자, 게시판, 댓글 관리)")
 public class AdminController {
 
     private final UsersService usersService;
@@ -39,6 +42,7 @@ public class AdminController {
     private final CommentService commentService;
 
     @GetMapping("/listForAdminP")
+    @Operation(summary = "관리자 게시판 및 댓글 리스트 페이지", description = "게시글 및 신고 댓글 리스트를 페이징, 필터링해서 조회")
     public String boardListPFromAdmin(Model model,
                                       @RequestParam(value = "page", defaultValue = "0") int page,
                                       @RequestParam(value = "size", defaultValue = "10") int size,
@@ -52,7 +56,7 @@ public class AdminController {
 
         // 게시글 검색 기능
         Page<Board> boardList;
-        if ("all".equals(selectValue) || text.isEmpty()) {
+        if ("all".equals(selectValue) || text.trim().isEmpty()) {
             boardList = boardService.getAllPagesBoards(boardPageable);
             model.addAttribute("boardList", boardList);
             log.info("admin Page board : {}", boardPageable.getPageNumber());
@@ -63,7 +67,7 @@ public class AdminController {
 
         // 댓글 검색 기능
         Page<CommentDTO> commentList;
-        if ("all_comment".equals(selectComment) || textComment.isEmpty()) {
+        if ("all_comment".equals(selectComment) || textComment.trim().isEmpty()) {
             // 신고당한 댓글만 가져옴
             commentList = commentService.getReportComment(commentPageable);
             model.addAttribute("commentList", commentList);
@@ -75,6 +79,7 @@ public class AdminController {
     };
 
     // 관리자 유저페이지로 이동
+    @Operation(summary = "관리자 대시보드", description = "관리자용 사용자 리스트 및 소셜 사용자 리스트 조회")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @GetMapping
     public String adminDashboardFromAdmin(Model model) {
@@ -88,12 +93,13 @@ public class AdminController {
     };
 
     //사용자 블랙
+    @Operation(summary = "사용자 차단", description = "사용자를 블랙리스트에 등록하여 차단")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/users/block/{id}")
     public @ResponseBody String blockUserFromAdmin(@PathVariable("id") String id, @RequestParam("blockReason") String blockReason) {
         Optional<Users> user = usersService.findByUId(id);
 
-        if (user.isPresent()) { 
+        if (user.isPresent()) {
             Users foundUser = user.get();
             foundUser.setUBlockReason(blockReason);
             usersService.blockUser(foundUser);
@@ -101,8 +107,9 @@ public class AdminController {
         }
         return "error";
     };
-    
+
     //블랙취소
+    @Operation(summary = "사용자 차단 해제", description = "블랙리스트에서 사용자 차단 해제")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/users/unblock/{id}")
     public @ResponseBody String unblockUserFromAdmin(@PathVariable("id") String id) {
@@ -117,8 +124,9 @@ public class AdminController {
         return "error";
     };
 
-    @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     // 잠금 해제 처리
+    @Operation(summary = "사용자 잠금 해제", description = "잠긴 사용자의 계정 잠금 해제")
+    @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/users/unlock/{userId}")
     @ResponseBody
     public String unlockUserFromAdmin(@PathVariable("userId") String userId) {
@@ -133,6 +141,7 @@ public class AdminController {
     //관리자 전환
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users/{id}/role")
+    @Operation(summary = "관리자 권한 부여/해제", description = "사용자 권한을 ADMIN 혹은 SUB_ADMIN으로 승격/강등")
     public @ResponseBody String changeUserRoleFromAdmin(@PathVariable("id") String id, @RequestParam("action") String action) {
         if ("promote".equals(action)) {
             usersService.promoteToAdmin(id);
@@ -141,8 +150,8 @@ public class AdminController {
         }
         return "success";
     };
-    
-    // 게시글 삭제처리
+
+    @Operation(summary = "게시글 숨김 처리", description = "게시글을 실제 삭제하지 않고 숨김 처리")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/board/{b_idx}/delete")
     public ResponseEntity<String> deleteBoardFromAdmin(@PathVariable("b_idx") Long b_idx) {
@@ -155,7 +164,7 @@ public class AdminController {
         }
     };
 
-    // 게시글 복구 
+    @Operation(summary = "게시글 신고 상태 해결", description = "신고된 게시글의 신고 상태를 해제")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/board/{b_idx}/resolve")
     public ResponseEntity<String> resolveReportFromAdmin(@PathVariable("b_idx") Long b_idx) {
@@ -168,7 +177,7 @@ public class AdminController {
         }
     };
 
-    //관리자 댓글 삭제
+    @Operation(summary = "댓글 삭제", description = "관리자가 댓글을 삭제 처리")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/comment/{cIdx}/delete")
     public ResponseEntity<String> deleteCommentFromAdmin(@PathVariable Long cIdx){
@@ -181,7 +190,7 @@ public class AdminController {
         }
     };
 
-    //관리자 댓글 복원
+    @Operation(summary = "댓글 신고 상태 해결", description = "관리자가 신고된 댓글의 상태를 해결")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/comment/{cIdx}/resolve")
     public ResponseEntity<String> resolveCommentFromAdmin(@PathVariable Long cIdx){

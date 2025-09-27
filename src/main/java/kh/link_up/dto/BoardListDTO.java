@@ -17,6 +17,8 @@ public class BoardListDTO implements Serializable {
     private LocalDateTime uploadTime;
     private int viewCount;
     private String isDeleted; // 삭제 여부 (b_is_deleted -> isDeleted)
+    private int likeCount;
+    private int dislikeCount;
 
     public BoardListDTO(Board board) {
         this.bIdx = board.getBIdx();
@@ -25,6 +27,8 @@ public class BoardListDTO implements Serializable {
         this.uploadTime = board.getUploadTime().toLocalDateTime();
         this.viewCount = board.getViewCount();
         this.isDeleted = board.getIsDeleted();
+        this.likeCount = board.getLikeCount();
+        this.dislikeCount = board.getDislikeCount();
 
         if (board.getWriter() != null) {
             this.writerName = board.getWriter().getUNickname();

@@ -10,14 +10,17 @@ import kh.link_up.repository.BoardRepository;
 import kh.link_up.repository.CommentRepository;
 import kh.link_up.repository.SocialUserRepository;
 import kh.link_up.repository.UsersRepository;
+import kh.link_up.util.UserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -31,29 +34,32 @@ public class CommentService {
     private final CommentConverter commentConverter;
     private final BoardRepository boardRepository;
     private final SocialUserRepository socialUserRepository;
+    private final UserUtil userUtil;
 
     @Transactional
-    public Comment createComment(CommentDTO commentRequestDto) {
-        log.info("idx : {}", commentRequestDto); // commentRequestDto.getC_writer()는 String 타입임
+    public Comment createComment(CommentDTO commentRequestDto, Principal principal, Authentication authentication) {
+        log.info("idx : {}", commentRequestDto);
 
         Board board = boardRepository.findById(commentRequestDto.getB_idx())
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글(idx: " + commentRequestDto.getB_idx() + ")을 찾을 수 없습니다."));
 
-        Users writer = usersRepository.findById(commentRequestDto.getC_writer()).orElse(null);
+        // 1. 로그인한 사용자 정보 가져오기
+        String nicknameOrEmail = userUtil.getUserIdentifier(principal, authentication); // 닉네임 or 이메일
+        String displayName = userUtil.getUserNickname(principal); // 보여줄 이름 (닉네임)
 
+        Users writer = usersRepository.findByuNickname(nicknameOrEmail);  // 일반 사용자 기준
         SocialUser socialUser = null;
 
-        // 일반 사용자로 찾지 못했을 경우 소셜 사용자로 찾기
         if (writer == null) {
-            socialUser = socialUserRepository.findByEmail(commentRequestDto.getUEmail());
+            socialUser = socialUserRepository.findByEmail(nicknameOrEmail);
         }
 
         Comment comment = Comment.builder()
                 .writer(writer)
-                .socialUser(socialUser)  // 소셜 사용자일 경우
+                .socialUser(socialUser)
                 .cContent(commentRequestDto.getC_content())
-                .cUsername(writer != null ? writer.getUUsername() : socialUser.getName())  // 일반 사용자 또는 소셜 사용자 이름 설정
-                .board(board)  // 게시글 연결
+                .cUsername(displayName)  // 유틸에서 가져온 닉네임
+                .board(board)
                 .build();
 
         return commentRepository.save(comment);
@@ -65,15 +71,21 @@ public class CommentService {
         Page<CommentDTO> commentDTOPage = commentPage.map(comment -> {
             CommentDTO commentDTO = commentConverter.convertToDTO(comment);
 
+            String originalName;
             String maskedName;
+
             if (comment.getSocialUser() != null) {
-                // 소셜 유저일 경우 소셜 유저의 이름을 마스킹
-                maskedName = maskName(comment.getSocialUser().getName());
+                originalName = comment.getSocialUser().getName();
+                maskedName = maskName(originalName);
             } else {
-                // 일반 유저일 경우 유저 닉네임을 마스킹
-                maskedName = maskName(comment.getWriter().getUNickname());
+                originalName = comment.getWriter().getUNickname();
+                maskedName = maskName(originalName);
             }
+
             commentDTO.setC_writer(maskedName);
+
+            // ✅ 로그 추가
+            log.info("댓글 작성자 원본 이름: {}, 마스킹된 이름: {}", originalName, maskedName);
 
             return commentDTO;
         });
@@ -81,13 +93,14 @@ public class CommentService {
         return commentDTOPage;
     }
 
-    //소셜유저 이름이 그대로 보여서 일단 만듬 문제는 이렇게함녀 아마 그 일반유저이름도 그대로 안보일듯
+    //소셜유저 이름이 그대로 보여서 일단 만듬 문제는 이렇게하면 아마 그 일반유저이름도 그대로 안보일듯
     public String maskName(String name) {
         if (name == null || name.length() <= 1) {
             return name;  // 이름이 1자 이하라면 그대로 반환
         }
 
         // 첫 글자만 남기고 나머지는 '*'로 변경
+
         return name.charAt(0) + "*".repeat(name.length() - 1);
     }
 
@@ -95,6 +108,7 @@ public class CommentService {
         return commentRepository.findReportComment(pageable).map(commentConverter::convertToDTO);
     }
 
+    // 관리자쪽에서 쓰이는 거
     public Page<Comment> getFilteredComments(String selectComment, String inputTextComment, Pageable pageable) {
         String selectCommentValue = selectComment.trim();
         String textCommentValue = inputTextComment.trim();
@@ -172,8 +186,5 @@ public class CommentService {
             return false;
         }
     }
-
-
-
 
 }

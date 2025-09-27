@@ -1,0 +1,57 @@
+@startuml
+left to right direction
+skinparam defaultFontName "Nanum Gothic"
+skinparam shadowing false
+skinparam rectangle {
+  BackgroundColor<<Controller>> LightBlue
+  BackgroundColor<<Service>> LightGreen
+  BackgroundColor<<Repository>> LightYellow
+  BackgroundColor<<Infra>> #F0E68C
+  BackgroundColor<<Auth>> #FFDAB9
+  BorderColor Black
+  BorderThickness 1
+  RoundCorner 10
+}
+
+actor "Client\n(웹 브라우저)" as Client
+
+rectangle "Spring Boot 서버" {
+    rectangle "Controller\n- 요청 처리 및 검증" as Controller <<Controller>>
+    rectangle "Service\n- 비즈니스 로직\n  • 노션 CRUD\n  • 게시글/댓글 CRUD\n  • 좋아요/싫어요 (비동기)\n  • 회원 가입/로그인\n  • 파일 업로드\n  • 관리자 기능" as Service <<Service>>
+    rectangle "JPA Repository\n- MySQL CRUD\n- 파일 메타데이터 저장" as Repository <<Repository>>
+    rectangle "게시글 캐시\n- Redis 기반 캐싱 (조회 시 캐시 확인, DB 미스 시 갱신)" as PostCache <<Infra>>
+    rectangle "Redis Publisher\n- 댓글 알림 이벤트 발행 (Pub/Sub)" as RedisPub <<Infra>>
+    rectangle "OAuth2 인증 필터\n(Spring Security 내)" as OAuth2 <<Auth>>
+    rectangle "Global Exception Handler\n- 공통 예외 처리" as ExceptionHandler <<Infra>>
+}
+
+database "Redis" as Redis <<Infra>>
+database "MySQL" as MySQL <<DB>>
+folder "로컬 파일 저장소\n(Local File Storage)" as LocalFS <<Infra>>
+
+Client --> Controller : HTTP 요청
+Controller <-- Client : HTTP 응답
+
+Controller --> Service : 요청 전달 및 검증
+Controller <-- Service : 처리 결과 반환
+
+Service --> PostCache : 캐시 조회 요청
+PostCache --> Service : 캐시 조회 결과
+
+Service --> Repository : DB 조회/저장 요청
+Repository --> Service : DB 결과 반환
+Repository --> MySQL : 영속화 처리
+
+Service --> RedisPub : 댓글 알림 이벤트 발행 요청
+RedisPub --> Redis : Pub/Sub 메시지 발행
+Redis --> RedisPub : 발행 결과 (확인)
+
+Service --> LocalFS : 파일 저장 요청
+LocalFS --> Service : 저장 결과 반환
+
+OAuth2 --> Controller : 인증 요청
+Controller --> OAuth2 : 인증 결과 반환
+
+Controller <-- ExceptionHandler : 예외 처리 후 응답 반환
+
+@enduml

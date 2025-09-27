@@ -40,11 +40,11 @@ public class Comment {
 
     @Column(nullable = false)
     @Builder.Default
-    private int cLike = 0;
+    private Integer cLike = 0;
 
     @Column(nullable = false)
     @Builder.Default
-    private int cDislike = 0;
+    private Integer cDislike = 0;
 
     @Column(nullable = false)
     @Builder.Default
@@ -62,21 +62,4 @@ public class Comment {
         }
     }
 
-    public void increaseCommentLike(boolean resetToZero) {
-        if (resetToZero) {
-            cReport = 0;
-        } else {
-            cReport += 1;
-        }
-    }
-
-    public void decreaseCommentLike(boolean resetToZero) {
-        if (resetToZero) {
-            cReport = 0;
-        } else {
-            cReport += 1;
-        }
-    }
-
-    // getters and setters
 }

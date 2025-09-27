@@ -5,8 +5,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
@@ -18,13 +20,19 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-       //**AccessDeniedHandler**는 인증된 사용자가 권한이 없는 리소스에 접근할 때 동작하며, 권한 부족 메시지나 JSON 형식으로 메시지를 반환합니다.
-        // like 권한?, 인가? 같은 느낌
+//       **AccessDeniedHandler**는 인증된 사용자가 권한이 없는 리소스에 접근할 때 동작하며,
+//       권한 부족 메시지나 JSON 형식으로 메시지를 반환합니다.
+//       권한 실패 처리
         log.info("CustomAccessDeniedHandler invoked");
 
         // 인증 정보 가져오기
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        log.debug("Authentication: {}", authentication);
+
+        if(authentication instanceof UsernamePasswordAuthenticationToken){
+            log.debug("form Authentication: {}", authentication);
+        }else if(authentication instanceof OAuth2AuthenticationToken){
+            log.debug("oauth2 Authentication : {}", authentication);
+        }
 
         // 상태 코드 기본값 403 (권한 없음)으로 설정
         int statusCode = HttpServletResponse.SC_FORBIDDEN;

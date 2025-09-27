@@ -77,6 +77,11 @@ $(document).ready(function () {
 // 좋아요 증가
 $(document).on("click", "#likeButton", function () {
   const boardId = $(this).data("board-id");
+  const $likeCount = $("#likeCount");
+  const currentCount = parseInt($likeCount.text() || "0");
+
+  // UI 즉시 증가
+  $likeCount.text(currentCount + 1);
 
   $.ajax({
     url: "/board/" + boardId + "/like",
@@ -93,6 +98,12 @@ $(document).on("click", "#likeButton", function () {
 // 싫어요 증가
 $(document).on("click", "#dislikeButton", function () {
   const boardId = $(this).data("board-id");
+  const $dislikeCount = $("#dislikeCount");
+  const currentCount = parseInt($dislikeCount.text() || "0");
+
+  // UI 즉시 증가
+  $dislikeCount.text(currentCount + 1);
+
 
   $.ajax({
     url: "/board/" + boardId + "/dislike",
@@ -100,6 +111,46 @@ $(document).on("click", "#dislikeButton", function () {
     contentType: "application/json",
     success: function (response) {
       $("#dislikeCount").text(response.dislikeCount); // 값만 갱신
+    },
+    error: handleError,
+  });
+});
+
+// 댓글 좋아요 증가
+$(document).on("click", ".comment-like-button", function () {
+  const commentId = $(this).data("comment-id");
+  const $likeCount = $(this).siblings(".comment-like-count");
+  const currentCount = parseInt($likeCount.text() || "0");
+
+  // UI 즉시 증가
+  $likeCount.text(currentCount + 1);
+
+  $.ajax({
+    url: "/users/" +"/comment/" + commentId + "/like",
+    method: "POST",
+    contentType: "application/json",
+    success: function (response) {
+      $likeCount.text(response.likeCount); // 서버에서 받은 최신 값으로 갱신
+    },
+    error: handleError,
+  });
+});
+
+// 댓글 싫어요 증가
+$(document).on("click", ".comment-dislike-button", function () {
+  const commentId = $(this).data("comment-id");
+  const $dislikeCount = $(this).siblings(".comment-dislike-count");
+  const currentCount = parseInt($dislikeCount.text() || "0");
+
+  // UI 즉시 증가
+  $dislikeCount.text(currentCount + 1);
+
+  $.ajax({
+    url: "/users/" + "/comment/" + commentId + "/dislike",
+    method: "POST",
+    contentType: "application/json",
+    success: function (response) {
+      $dislikeCount.text(response.dislikeCount); // 서버에서 받은 최신 값으로 갱신
     },
     error: handleError,
   });
