@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
@@ -20,6 +21,7 @@ public class LikeDislikeSyncService {
     private final CommentRepository commentRepository;
 
     @Scheduled(fixedRate = 300_000)
+    @Transactional
     public void syncLikeDislikeToDB() {
         log.debug("🟡 [좋아요/싫어요 동기화 시작]");
 

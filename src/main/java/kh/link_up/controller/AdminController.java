@@ -56,7 +56,7 @@ public class AdminController {
 
         // 게시글 검색 기능
         Page<Board> boardList;
-        if ("all".equals(selectValue) || text.isEmpty()) {
+        if ("all".equals(selectValue) || text.trim().isEmpty()) {
             boardList = boardService.getAllPagesBoards(boardPageable);
             model.addAttribute("boardList", boardList);
             log.info("admin Page board : {}", boardPageable.getPageNumber());
@@ -67,7 +67,7 @@ public class AdminController {
 
         // 댓글 검색 기능
         Page<CommentDTO> commentList;
-        if ("all_comment".equals(selectComment) || textComment.isEmpty()) {
+        if ("all_comment".equals(selectComment) || textComment.trim().isEmpty()) {
             // 신고당한 댓글만 가져옴
             commentList = commentService.getReportComment(commentPageable);
             model.addAttribute("commentList", commentList);

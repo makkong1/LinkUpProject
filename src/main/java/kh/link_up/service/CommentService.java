@@ -108,6 +108,7 @@ public class CommentService {
         return commentRepository.findReportComment(pageable).map(commentConverter::convertToDTO);
     }
 
+    // 관리자쪽에서 쓰이는 거
     public Page<Comment> getFilteredComments(String selectComment, String inputTextComment, Pageable pageable) {
         String selectCommentValue = selectComment.trim();
         String textCommentValue = inputTextComment.trim();

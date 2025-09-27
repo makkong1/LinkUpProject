@@ -58,7 +58,6 @@ public class BoardService {
         return new PageImpl<>(allBoards, pageable, filteredBoards.getTotalElements() + noticeBoards.size());
     }
 
-
     // 게시글  조회 메서드
     @Transactional(readOnly = true)
     public Optional<BoardDTO> getBoardById(Long id) {
@@ -104,7 +103,7 @@ public class BoardService {
         return false; // 해당 게시글이 존재하지 않을 경우 신고 처리 실패
     }
 
-    // 게시글 검색 조건
+    // 게시글 검색 조건(관리자용) / admincontroller에서 쓰이는 메서드
     public Page<Board> getFilteredBoards(String selectValue, String text, Pageable pageable) {
         selectValue = selectValue.trim();
         text = text.trim();
@@ -120,13 +119,26 @@ public class BoardService {
         };
     }
 
-    // 게시글 페이징 가져오기 (유저용)
+//    게시글 페이징 가져오기 (유저용)
+//    public Page<Board> getFilteredBoardsForUser(String selectValue, String text, Pageable pageable) {
+//        selectValue = selectValue.trim();
+//        text = text.trim();
+//
+//        // 검색 조건을 한 메소드에서 처리
+//        return boardRepository.searchByCriteria(selectValue, text, "INQUIRY", pageable);
+//    }
+
+//  게시글 페이징 가져오기 (유저용) / 위에서 쓰이는 메서드
     public Page<Board> getFilteredBoardsForUser(String selectValue, String text, Pageable pageable) {
         selectValue = selectValue.trim();
         text = text.trim();
 
-        // 검색 조건을 한 메소드에서 처리
-        return boardRepository.searchByCriteria(selectValue, text, "INQUIRY", pageable);
+        return switch (selectValue) {
+            case "title" -> boardRepository.searchByTitleForUsers(text, "INQUIRY", pageable);
+            case "writer" -> boardRepository.searchByWriterForUsers(text, "INQUIRY", pageable);
+            case "content" -> boardRepository.searchByContentForUsers(text, "INQUIRY", pageable);
+            default -> boardRepository.findByCategory("GENERAL", pageable);
+        };
     }
 
     public Board save(Board board) {

@@ -12,11 +12,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    @Query("select c from Comment c where c.writer.uNickname like %:writer%")
+    @Query("select c from Comment c where c.writer.uNickname like concat(:writer, '%')")
     Page<Comment> findByWriterContaining(String writer, Pageable pageable);
 
-    @Query("select c from Comment c where c.cContent like %:content%")
-    Page<Comment> findByContentContaining(String content, Pageable pageable);
+    // 내용 검색 (FullText)
+    @Query(value = "SELECT * FROM comment WHERE MATCH(c_content) AGAINST(:content IN BOOLEAN MODE)",
+            countQuery = "SELECT COUNT(*) FROM comment WHERE MATCH(c_content) AGAINST(:content IN BOOLEAN MODE)",
+            nativeQuery = true)
+    Page<Comment> findByContentContaining(@Param("content") String content, Pageable pageable);
 
     Page<Comment> findAll(Pageable pageable);
 
@@ -26,7 +29,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("select c from Comment c where c.cReport >= 1")
     Page<Comment> findReportComment(Pageable pageable);
 
-    // CommentRepository
     @Modifying
     @Query("UPDATE Comment c SET c.cLike = c.cLike + :like, c.cDislike = c.cDislike + :dislike WHERE c.id = :id")
     int updateLikeDislikeCount(@Param("id") Long id, @Param("like") int like, @Param("dislike") int dislike);
