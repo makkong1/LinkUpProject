@@ -75,6 +75,7 @@ public class BoardController {
         }
         // 뷰에 페이징된 게시글 전달
         model.addAttribute("boardPage", boardPage); // BoardListDTO 타입으로 전달
+        log.debug("boardPage : {}", boardPage.getTotalPages());
         return "board/list"; // Thymeleaf 템플릿 파일 경로
     }
 

@@ -35,11 +35,11 @@ public class BoardService {
         return boardRepository.findAll(pageable);
     }
 
+    // 전체게시글가져오기 (사용자 전용)
     public Page<BoardListDTO> getAllPagesBoardsForUsers(String selectValue, String text, Pageable pageable) {
         // 공지사항(NOTICE) 게시글을 먼저 가져옵니다.
         BoardListDTOWrapper noticeBoardWrapper = boardCacheService.getNoticeBoard();  // 이제 BoardListDTOWrapper 객체를 반환
         List<BoardListDTO> noticeBoards = noticeBoardWrapper.getBoardListDTO();  // BoardListDTO 리스트 가져오기
-        log.debug("캐시 게시글 : {}", noticeBoards);
 
         // 검색 조건을 확인하여 필터링된 게시글을 가져옵니다.
         Page<Board> filteredBoards;
@@ -55,7 +55,7 @@ public class BoardService {
         allBoards.addAll(filteredBoards.getContent().stream().map(BoardListDTO::new).toList());  // 나머지 게시글도 DTO로 변환
 
         // 합쳐진 게시글 리스트를 다시 Page 객체로 변환
-        return new PageImpl<>(allBoards, pageable, filteredBoards.getTotalElements() + noticeBoards.size());
+        return new PageImpl<>(allBoards, pageable, filteredBoards.getTotalElements());
     }
 
     // 게시글  조회 메서드
