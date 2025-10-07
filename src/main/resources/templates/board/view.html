@@ -46,6 +46,12 @@
                         </span>
                     </div>
                 </div>
+                <div class="post-tools" style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" id="shareBtn" class="submit-btn" style="border:none;">
+                        <i class="fas fa-link"></i>
+                        링크 복사
+                    </button>
+                </div>
             </header>
 
             <div class="post-content">
@@ -182,6 +188,36 @@
             목록으로 돌아가기
         </a>
     </footer>
+    <script>
+        (function () {
+            var shareBtn = document.getElementById('shareBtn');
+            if (!shareBtn) return;
+            shareBtn.addEventListener('click', function () {
+                var url = window.location.href;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(function () {
+                        if (window.Toastify) {
+                            Toastify({ text: '링크가 복사되었습니다.', duration: 2000, gravity: 'top', position: 'center', backgroundColor: '#4f8cff' }).showToast();
+                        } else {
+                            alert('링크가 복사되었습니다.');
+                        }
+                    });
+                } else {
+                    var temp = document.createElement('input');
+                    temp.value = url;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                    if (window.Toastify) {
+                        Toastify({ text: '링크가 복사되었습니다.', duration: 2000, gravity: 'top', position: 'center', backgroundColor: '#4f8cff' }).showToast();
+                    } else {
+                        alert('링크가 복사되었습니다.');
+                    }
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>

@@ -1,104 +1,288 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Contents</title>
-    <script src="/js/Js/session-timer2.js"></script>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <link rel="stylesheet" th:href="@{/js/css/user-content.css}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="/js/Js/session-timer2.js"></script>
     <script src="/js/Js/ssenotification.js"></script>
     <script>
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = savedTheme || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { }
+        })();
         document.addEventListener('DOMContentLoaded', function () {
             const userId = $('#userId').data('username');
             if (userId) {
                 startSSENotifications(userId);
             }
-
-            // 탭 기능
-            const tabs = document.querySelectorAll('.tab');
-            const contents = document.querySelectorAll('.tab-content');
-
-            // 기본적으로 두 번째 탭(Boards)이 선택되도록 설정
-            tabs[0].classList.add('active');
-            contents[0].classList.add('active');
-
+            const tabs = document.querySelectorAll('.uc-tab');
+            const panels = document.querySelectorAll('.uc-panel');
+            if (tabs.length > 0) {
+                tabs[0].classList.add('active');
+            }
+            if (panels.length > 0) {
+                panels[0].classList.add('active');
+            }
             tabs.forEach((tab, index) => {
                 tab.addEventListener('click', () => {
                     tabs.forEach(t => t.classList.remove('active'));
-                    contents.forEach(c => c.classList.remove('active'));
-
+                    panels.forEach(p => p.classList.remove('active'));
                     tab.classList.add('active');
-                    contents[index].classList.add('active');
+                    panels[index].classList.add('active');
                 });
             });
         });
     </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Minimal page container to align with board pages */
+        .uc-container {
+            max-width: 900px;
+            margin: 40px auto 0 auto;
+            padding: 0 16px;
+        }
+
+        .uc-card {
+            background: var(--uc-surface);
+            border-radius: 18px;
+            box-shadow: var(--uc-shadow);
+            overflow: hidden;
+        }
+
+        .uc-header {
+            padding: 24px 24px 16px 24px;
+            border-bottom: 1px solid var(--uc-border);
+        }
+
+        .uc-title {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--uc-text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .uc-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--uc-border);
+            background: var(--uc-subtle);
+        }
+
+        .uc-tab {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            background: var(--uc-chip-bg);
+            color: var(--uc-text-sub);
+            border: 1px solid var(--uc-border);
+        }
+
+        .uc-tab.active {
+            background: var(--uc-primary-soft);
+            color: var(--uc-primary);
+            border-color: var(--uc-primary);
+        }
+
+        .uc-panel {
+            display: none;
+            padding: 18px;
+        }
+
+        .uc-panel.active {
+            display: block;
+            animation: fadeInUp .4s ease-out;
+        }
+
+        .uc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .uc-item {
+            background: var(--uc-item-bg);
+            border: 1px solid var(--uc-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            transition: transform .18s, box-shadow .18s, background .18s;
+        }
+
+        .uc-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--uc-shadow);
+            background: var(--uc-item-hover);
+        }
+
+        .uc-item-title {
+            margin: 0 0 6px 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--uc-text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .uc-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            color: var(--uc-text-sub);
+            font-size: .94rem;
+        }
+
+        .uc-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        .uc-badge.general {
+            background: var(--uc-primary-soft);
+            color: var(--uc-primary);
+        }
+
+        .uc-badge.inquiry {
+            background: rgba(56, 182, 255, .12);
+            color: #38b6ff;
+        }
+
+        .uc-badge.notice {
+            background: rgba(255, 179, 71, .15);
+            color: #ffb347;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width:700px) {
+            .uc-container {
+                padding: 0 6px;
+            }
+
+            .uc-header {
+                padding: 18px;
+            }
+
+            .uc-panel {
+                padding: 14px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<div th:replace="header :: header(${user})"></div>
-<div id="userId" th:data-username="${user.uUsername}"></div>
+    <div th:replace="header :: header(${user})"></div>
+    <div id="userId" th:data-username="${user.uUsername}"></div>
 
-<h1>User Contents</h1>
+    <main class="uc-container">
+        <section class="uc-card">
+            <header class="uc-header">
+                <h1 class="uc-title"><i class="fas fa-user"></i> 사용자 활동</h1>
+            </header>
+            <nav class="uc-tabs">
+                <div class="uc-tab"><i class="fas fa-pen"></i>&nbsp;Boards</div>
+                <div class="uc-tab"><i class="fas fa-comments"></i>&nbsp;Comments</div>
+                <div class="uc-tab"><i class="fas fa-book"></i>&nbsp;Notions</div>
+            </nav>
+            <section class="uc-panel">
+                <ul class="uc-list">
+                    <li class="uc-item" th:each="board : ${userContents.boards}">
+                        <h3 class="uc-item-title">
+                            <i class="fas fa-file-alt"></i>
+                            <span th:text="${board.title}">제목</span>
+                        </h3>
+                        <div class="uc-meta">
+                            <span>
+                                <span class="uc-badge general" th:if="${board.category == 'GENERAL'}">일반</span>
+                                <span class="uc-badge inquiry" th:if="${board.category == 'INQUIRY'}">문의</span>
+                                <span class="uc-badge notice" th:if="${board.category == 'NOTICE'}">공지</span>
+                            </span>
+                            <span><i class="fas fa-user"></i>&nbsp;<span
+                                    th:text="${board.writer.getUNickname()}">작성자</span></span>
+                            <span><i class="fas fa-eye"></i>&nbsp;<span th:text="${board.viewCount}">0</span></span>
+                            <span><i class="fas fa-thumbs-up"></i>&nbsp;<span
+                                    th:text="${board.likeCount}">0</span></span>
+                            <span><i class="fas fa-calendar"></i>&nbsp;<span
+                                    th:text="${#dates.format(board.uploadTime, 'yyyy-MM-dd')}">날짜</span></span>
+                        </div>
+                        <div class="uc-text" style="margin-top:8px; color: var(--uc-text-main); white-space: pre-wrap;">
+                            [[${board.content}]]</div>
+                    </li>
+                </ul>
+            </section>
+            <section class="uc-panel">
+                <ul class="uc-list">
+                    <li class="uc-item" th:each="comment : ${userContents.comments}">
+                        <h3 class="uc-item-title"><i class="fas fa-comment"></i><span
+                                th:text="${comment.cContent}">내용</span></h3>
+                        <div class="uc-meta">
+                            <span><i class="fas fa-user"></i>&nbsp;<span
+                                    th:text="${comment.writer.getUNickname()}">작성자</span></span>
+                            <span><i class="fas fa-thumbs-up"></i>&nbsp;<span th:text="${comment.cLike}">0</span></span>
+                            <span><i class="fas fa-calendar"></i>&nbsp;<span
+                                    th:text="${#dates.format(comment.cUpload, 'yyyy-MM-dd')}">날짜</span></span>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+            <section class="uc-panel">
+                <ul class="uc-list">
+                    <li class="uc-item" th:each="notion : ${userContents.notions}">
+                        <h3 class="uc-item-title"><i class="fas fa-book"></i><span th:text="${notion.nTitle}">제목</span>
+                        </h3>
+                        <div class="uc-meta">
+                            <span><i class="fas fa-user"></i>&nbsp;<span
+                                    th:text="${notion.writer.getUNickname()}">작성자</span></span>
+                            <span><i class="fas fa-calendar"></i>&nbsp;<span
+                                    th:text="${notion.NUploadTime}">날짜</span></span>
+                        </div>
+                        <div class="uc-text" style="margin-top:8px; color: var(--uc-text-main); white-space: pre-wrap;">
+                            [[${notion.nContent}]]</div>
+                    </li>
+                </ul>
+            </section>
+        </section>
+        <div style="height:20px"></div>
+        <div id="notification-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+        <div style="height:20px"></div>
 
-<!-- 탭 버튼들 -->
-<div class="tabs">
-    <div class="tab">Boards</div>
-    <div class="tab">Comments</div>
-    <div class="tab">Notions</div>
-</div>
-
-<!-- Boards Section -->
-<div class="tab-content">
-    <h2>Boards</h2>
-    <ul class="boardContents">
-        <li th:each="board : ${userContents.boards}">
-            <p>
-                카테고리:
-                <span th:if="${board.category == 'GENERAL'}" th:text="'일반'"></span>
-                <span th:if="${board.category == 'INQUIRY'}" th:text="'문의'"></span>
-                <span th:if="${board.category == 'NOTICE'}" th:text="'공지사항'"></span>
-            </p>
-            <p>제목: <span th:text="${board.title}"></span></p>
-            <p>작성자: <span th:text="${board.writer.getUNickname()}"></span></p>
-            <p>내용: <span th:text="${board.content}"></span></p>
-            <p>조회수: <span th:text="${board.viewCount}"></span></p>
-            <p>좋아요: <span th:text="${board.likeCount}"></span></p>
-            <p>작성일: <span th:text="${#dates.format(board.uploadTime, 'yyyy-MM-dd')}"></span></p>
-        </li>
-    </ul>
-</div>
-
-<!-- Comments Section -->
-<div class="tab-content">
-    <h2>Comments</h2>
-    <ul class="commentContents">
-        <li th:each="comment : ${userContents.comments}">
-            <p>Writer: <span th:text="${comment.writer.getUNickname()}"></span></p>
-            <p>Content: <span th:text="${comment.cContent}"></span></p>
-            <p>Likes: <span th:text="${comment.cLike}"></span></p>
-            <p>Created At: <span th:text="${#dates.format(comment.cUpload, 'yyyy-MM-dd')}"></span></p>
-        </li>
-    </ul>
-</div>
-
-<!-- Notions Section -->
-<div class="tab-content">
-    <h2>Notions</h2>
-    <ul class="notionContents">
-        <li th:each="notion : ${userContents.notions}">
-            <p>Title: <span th:text="${notion.nTitle}"></span></p>
-            <p>Writer: <span th:text="${notion.writer.getUNickname()}"></span></p>
-            <p>Content: <span th:text="${notion.nContent}"></span></p>
-            <p>Created At: <span th:text="${notion.NUploadTime}"></span></p>
-        </li>
-    </ul>
-</div>
+    </main>
 
 </body>
+
 </html>

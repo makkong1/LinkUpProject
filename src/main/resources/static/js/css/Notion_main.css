@@ -1,73 +1,97 @@
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #fafafa; /* 좀 더 밝은 배경색 */
-    margin: 0;
-    padding: 0;
+/* Theme tokens */
+:root {
+    --np-bg: #f7f8fa;
+    --np-surface: #ffffff;
+    --np-text-main: #22223b;
+    --np-text-sub: #6c757d;
+    --np-border: #e5e7eb;
+    --np-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    --np-primary: #4f8cff;
+    --np-primary-hover: #38b6ff;
 }
 
-header {
-    background-color: #2d3e50; /* 어두운 헤더 색상 */
-    color: #fff;
-    padding: 15px 0;
-    text-align: center;
+:root[data-theme='dark'] {
+    --np-bg: #181a1b;
+    --np-surface: #23262b;
+    --np-text-main: #f1f3f5;
+    --np-text-sub: #b0b8c1;
+    --np-border: #343a40;
+    --np-shadow: 0 4px 24px rgba(0,0,0,0.25);
+    --np-primary: #7ab8ff;
+    --np-primary-hover: #38b6ff;
 }
+
+body {
+    font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
+    background-color: var(--np-bg);
+    margin: 0;
+    padding: 0;
+    color: var(--np-text-main);
+}
+
+.np-header { border-bottom: 1px solid var(--np-border); background: var(--np-surface); }
+.np-title { margin:0; padding: 18px; font-size: 1.7rem; font-weight: 700; }
 
 .container {
     display: flex;
     height: 90vh;
 }
 
+.np-container { max-width: 1100px; margin: 0 auto; box-shadow: none; }
+
 /* Left side: Notion page list */
 .notion-list {
     width: 20%;
-    background-color: #f4f7f6; /* 살짝 연한 회색으로 변경 */
+    background-color: var(--np-surface);
     padding: 20px;
     overflow-y: auto;
     box-sizing: border-box;
+    border-right: 1px solid var(--np-border);
 }
 
 .notion-link {
     display: block;
     padding: 10px;
     margin-bottom: 10px;
-    background-color: #ffffff;
-    color: #444; /* 더 짙은 텍스트 색상 */
+    background-color: var(--np-surface);
+    color: var(--np-text-main);
     text-decoration: none;
     border-radius: 5px;
     transition: background-color 0.3s;
-    border: 1px solid #ddd; /* 경계선을 추가 */
+    border: 1px solid var(--np-border);
 }
 
-.notion-link:hover {
-    background-color: #e8f1f4; /* 링크 hover 시 좀 더 부드러운 파란색으로 */
-}
+.notion-link:hover { background-color: rgba(79,140,255,.08); }
 
 /* Right side: Notion content */
 .notion-content {
     width: 80%;
-    background-color: white;
+    background-color: var(--np-surface);
     padding: 40px;
     box-sizing: border-box;
     overflow-y: auto;
 }
 
-.notion-container h2 {
+.np-content { box-shadow: var(--np-shadow); border-left: 1px solid var(--np-border); }
+
+.np-section-title {
     font-size: 2rem;
-    color: #333;
+    color: var(--np-text-main);
     margin-bottom: 20px;
     padding-bottom: 5px;
-    border-bottom: 2px solid #ccc;
+    border-bottom: 2px solid var(--np-border);
 }
 
 .edit-input,
 .edit-textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--np-border);
     border-radius: 5px;
-    background-color: #f7f9fa; /* 입력창 배경색을 약간 더 밝게 */
+    background-color: var(--np-surface);
     font-size: 1rem;
     margin-bottom: 20px;
+    color: var(--np-text-main);
 }
 
 .edit-textarea {
@@ -80,26 +104,9 @@ header {
     gap: 15px;
 }
 
-.save-btn,
-.cancel-btn {
-    padding: 10px 20px;
-    font-size: 1rem;
-    background-color: #5b8def; /* 저장 버튼을 더 눈에 띄는 파란색으로 변경 */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.save-btn:hover {
-    background-color: #4a7cd1; /* hover 시 조금 어두운 파란색 */
-}
-
-.cancel-btn {
-    background-color: #ff6b6b; /* 취소 버튼은 붉은 계열 */
-}
-
-.cancel-btn:hover {
-    background-color: #e65252; /* hover 시 어두운 붉은색 */
-}
+.np-primary { padding: 10px 20px; font-size: 1rem; background: linear-gradient(90deg, var(--np-primary) 0%, var(--np-primary-hover) 100%); color: #fff; border:none; border-radius: 22px; cursor:pointer; box-shadow: 0 2px 8px rgba(79,140,255,.12); }
+.np-primary:hover { background: linear-gradient(90deg, var(--np-primary-hover) 0%, var(--np-primary) 100%); }
+.np-danger { padding: 8px 12px; font-size: .95rem; background: #ff6b6b; color:#fff; border:none; border-radius: 8px; cursor:pointer; }
+.np-danger:hover { background: #e65252; }
+.np-ghost { padding: 10px 16px; font-size: 1rem; background: transparent; color: var(--np-text-main); border:1px solid var(--np-border); border-radius: 22px; cursor:pointer; }
+.np-actions { margin-top: 8px; }
