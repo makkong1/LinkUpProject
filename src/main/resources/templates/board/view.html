@@ -1,138 +1,187 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 상세 보기</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/js/Js/b_view.js"></script>
     <script src="/js/Js/session-timer2.js"></script>
     <script src="/js/Js/ssenotification.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" th:href="@{/js/css/B_view.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
     <!-- CSRF 토큰을 메타 태그에 추가 -->
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
 </head>
 
 <body>
-<!-- 헤더 포함 -->
-<div th:replace="header :: header(${user})"></div>
+    <!-- 헤더 포함 -->
+    <div th:replace="header :: header(${user})"></div>
 
-<div id="userId" th:data-username="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}"></div>
-<div id="userEmail" th:data-email="${user != null ? (isSocial ? user.uEmail : user.uEmail) : 'null'}"></div>
+    <div id="userId" th:data-username="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}"></div>
+    <div id="userEmail" th:data-email="${user != null ? (isSocial ? user.uEmail : user.uEmail) : 'null'}"></div>
 
-<table style="border: 1px solid black;">
-    <tr>
-        <td>
-            <h1 th:text="${board.title}"></h1>
-        </td>
-    </tr>
-    <tr>
-        <td>작성자: <span th:text="${board.bWriter}">작성자</span></td>
-    </tr>
-    <tr>
-        <td>내용: <span th:text="${board.content}">내용</span></td>
-    </tr>
-    <tr th:if="${board.filePath != null and !#strings.isEmpty(board.filePath)}">
-        <td>
-            <!-- 파일 경로에 저장된 이미지 불러오기 -->
-            <img th:src="@{'/file/' + ${board.getBWriter()} + '/' + ${board.getTitle()} + '/' + ${#strings.replace(board.getFilePath(), '\\', '/')}}"
-                 alt="게시글 이미지"/>
-        </td>
-    </tr>
-    <tr>
-        <td>조회 수: <span th:text="${board.viewCount}">조회 수</span></td>
-    </tr>
-    <tr>
-        <td>등록일: <span th:text="${#dates.format(board.uploadTime, 'yyyy-MM-dd HH:mm')}">작성일</span></td>
-    </tr>
-    <tr>
-        <td>좋아요:<span id="likeCount" th:text="${board.likeCount}">좋아요</span></td>
-    </tr>
-    <tr>
-        <td>싫어요:<span id="dislikeCount" th:text="${board.dislikeCount}">싫어요</span></td>
-    </tr>
-    <tr>
-        <td>
-            <input type="button" id="likeButton" class="likeButton" th:data-board-id="${board.bIdx}" th:value="좋아요">
-            <input type="button" id="dislikeButton" class="dislikeButton" th:data-board-id="${board.bIdx}"
-                   th:value="싫어요">
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <textarea id="commentContent" placeholder="댓글 입력"></textarea>
-            <input type="hidden" id="writerId"
-                   th:value="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}"/>
-            <input type="hidden" id="writerEmail"
-                   th:value="${user != null ? (isSocial ? user.uEmail : user.uEmail) : 'null'}"/>
-            <input type="hidden" id="boardId" th:value="${board.bIdx}"/>
-            <input type="button" id="commentSubmit" value="댓글달기"/>
-        </td>
-    </tr>
-</table>
-<!-- 댓글 리스트 -->
-<h3>댓글</h3>
-<div id="commentList">
-    <div th:each="comment : ${comments}">
-        <div class="comment">
-            <strong th:text="${comment.c_idx} + 번"></strong>
-            <p>
-                <!-- 삭제된 댓글이 아닌 경우에만 댓글 내용과 작성자 보이기 -->
-                <span th:if="${comment.c_deleted == false}">
-                        <strong th:text="${comment.c_writer}">작성자 이름</strong>:
-                        <span th:text="${comment.c_content}">댓글 내용</span>
-                    </span>
-                <!-- 삭제된 댓글일 경우 '삭제된 댓글입니다.' 표시 -->
-                <span th:if="${comment.c_deleted == true}" th:text="'삭제된 댓글입니다.'" style="color: #999"></span>
-            </p>
-            <p><small th:text="'작성일: ' + ${comment.c_upLoad}">작성일</small></p>
+    <main class="board-container">
+        <article class="board-post">
+            <header class="post-header">
+                <h1 class="post-title" th:text="${board.title}"></h1>
+                <div class="post-meta">
+                    <div class="author-info">
+                        <i class="fas fa-user"></i>
+                        <span class="author" th:text="${board.bWriter}">작성자</span>
+                    </div>
+                    <div class="post-stats">
+                        <span class="view-count">
+                            <i class="fas fa-eye"></i>
+                            <span th:text="${board.viewCount}">조회 수</span>
+                        </span>
+                        <span class="upload-date">
+                            <i class="fas fa-calendar"></i>
+                            <span th:text="${#dates.format(board.uploadTime, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                        </span>
+                    </div>
+                </div>
+            </header>
 
-            <!-- 댓글 작성자가 본인일 때만 삭제 버튼 보이기 (익명 사용자는 안 보이도록) -->
-            <div
-                    th:if="${(isSocial != null and (isSocial ? comment.c_writer == user.name : comment.c_writer == user.uNickname)) and comment.c_deleted == false}">
-                <input id="deleteComment" type="button" th:value="삭제" th:data-comment-id="${comment.c_idx}"/>
+            <div class="post-content">
+                <div class="content-text" th:text="${board.content}">내용</div>
+                <div class="post-image" th:if="${board.filePath != null and !#strings.isEmpty(board.filePath)}">
+                    <img th:src="@{'/file/' + ${board.getBWriter()} + '/' + ${board.getTitle()} + '/' + ${#strings.replace(board.getFilePath(), '\\', '/')}}"
+                        alt="게시글 이미지" class="content-image" />
+                </div>
             </div>
-            <br>
 
-            <!-- 신고 버튼 (삭제된 댓글이 아닐 때만 보이도록 설정) -->
-            <div th:if="${comment.c_deleted == false and isSocial != null}">
-                <input id="reportComment" type="button" th:value="신고" th:data-comment-id="${comment.c_idx}"/>
+            <div class="post-actions">
+                <div class="like-section">
+                    <button type="button" id="likeButton" class="action-btn like-btn" th:data-board-id="${board.bIdx}">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>좋아요</span>
+                        <span class="count" id="likeCount" th:text="${board.likeCount}">0</span>
+                    </button>
+                    <button type="button" id="dislikeButton" class="action-btn dislike-btn"
+                        th:data-board-id="${board.bIdx}">
+                        <i class="fas fa-thumbs-down"></i>
+                        <span>싫어요</span>
+                        <span class="count" id="dislikeCount" th:text="${board.dislikeCount}">0</span>
+                    </button>
+                </div>
             </div>
-            <!-- 댓글 좋아요/싫어요 버튼 및 카운트 -->
-            <div th:if="${comment.c_deleted == false}">
-                <span>좋아요: <span class="comment-like-count" th:id="'comment-like-' + ${comment.c_idx}"
-                     th:text="${comment.c_like}"></span></span>
-                <span>싫어요: <span class="comment-dislike-count" th:id="'comment-dislike-' + ${comment.c_idx}"
-                                 th:text="${comment.c_dislike}"></span></span>
-                <br>
-                <input type="button" class="commentLikeButton" th:data-id="${comment.c_idx}" value="댓글 좋아요"/>
-                <input type="button" class="commentDislikeButton" th:data-id="${comment.c_idx}" value="댓글 싫어요"/>
+        </article>
+
+        <section class="comment-section">
+            <h3 class="section-title">
+                <i class="fas fa-comments"></i>
+                댓글
+            </h3>
+
+            <div class="comment-form">
+                <div class="form-group">
+                    <textarea id="commentContent" placeholder="댓글을 입력해주세요..." rows="3"></textarea>
+                    <input type="hidden" id="writerId"
+                        th:value="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}" />
+                    <input type="hidden" id="writerEmail"
+                        th:value="${user != null ? (isSocial ? user.uEmail : user.uEmail) : 'null'}" />
+                    <input type="hidden" id="boardId" th:value="${board.bIdx}" />
+                </div>
+                <button type="button" id="commentSubmit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    댓글 달기
+                </button>
             </div>
-        </div>
-    </div>
-</div>
+            <div class="comment-list" id="commentList">
+                <div th:each="comment : ${comments}" class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            <i class="fas fa-user-circle"></i>
+                            <span class="author-name" th:text="${comment.c_writer}">작성자</span>
+                            <span class="comment-number" th:text="'#' + ${comment.c_idx}">#번호</span>
+                        </div>
+                        <div class="comment-date">
+                            <i class="fas fa-clock"></i>
+                            <span th:text="${comment.c_upLoad}">작성일</span>
+                        </div>
+                    </div>
 
-<div class="pagination-container" th:if="${comments.totalPages >= 1}">
-    <ul class="pagination">
-        <!-- 이전 페이지 버튼 -->
-        <li th:classappend="${comments.hasPrevious() ? '' : 'disabled'}">
-            <a th:href="@{'/board/' + ${board.bIdx} + '?page=' + ${comments.pageable.pageNumber - 1}}">&laquo;</a>
-        </li>
-        <!-- 페이지 번호 리스트 -->
-        <li th:each="i : ${#numbers.sequence(0, comments.totalPages - 1)}"
-            th:classappend="${comments.pageable.pageNumber == i ? 'active' : ''}">
-            <a th:href="@{'/board/' + ${board.bIdx} + '?page=' + ${i}}">[[${i + 1}]]</a>
-        </li>
-        <!-- 다음 페이지 버튼 -->
-        <li th:classappend="${comments.hasNext() ? '' : 'disabled'}">
-            <a th:href="@{'/board/' + ${board.bIdx} + '?page=' + ${comments.pageable.pageNumber + 1}}">&raquo;</a>
-        </li>
-    </ul>
-</div>
+                    <div class="comment-body">
+                        <div th:if="${comment.c_deleted == false}" class="comment-content"
+                            th:text="${comment.c_content}">댓글 내용</div>
+                        <div th:if="${comment.c_deleted == true}" class="deleted-comment">
+                            <i class="fas fa-trash"></i>
+                            삭제된 댓글입니다.
+                        </div>
+                    </div>
 
-<!-- 목록으로 돌아가기 링크 -->
-<a href="/board">목록으로 돌아가기</a>
+                    <div class="comment-actions" th:if="${comment.c_deleted == false}">
+                        <div class="comment-reactions">
+                            <button type="button" class="comment-like-button" th:data-comment-id="${comment.c_idx}">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span class="comment-like-count" th:id="'comment-like-' + ${comment.c_idx}"
+                                    th:text="${comment.c_like}">0</span>
+                            </button>
+                            <button type="button" class="comment-dislike-button" th:data-comment-id="${comment.c_idx}">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span class="comment-dislike-count" th:id="'comment-dislike-' + ${comment.c_idx}"
+                                    th:text="${comment.c_dislike}">0</span>
+                            </button>
+                        </div>
+
+                        <div class="comment-controls">
+                            <div
+                                th:if="${(isSocial != null and (isSocial ? comment.c_writer == user.name : comment.c_writer == user.uNickname))}">
+                                <button type="button" class="delete-comment-btn" th:data-comment-id="${comment.c_idx}">
+                                    <i class="fas fa-trash"></i>
+                                    삭제
+                                </button>
+                            </div>
+                            <div th:if="${isSocial != null}">
+                                <button type="button" id="reportComment" class="report-btn"
+                                    th:data-comment-id="${comment.c_idx}">
+                                    <i class="fas fa-flag"></i>
+                                    신고
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagination-container" th:if="${comments.totalPages >= 1}">
+                <nav class="pagination-nav">
+                    <ul class="pagination">
+                        <li th:classappend="${comments.hasPrevious() ? '' : 'disabled'}">
+                            <a th:href="@{'/board/' + ${board.bIdx} + '?page=' + ${comments.pageable.pageNumber - 1}}"
+                                class="page-link">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        <li th:each="i : ${#numbers.sequence(0, comments.totalPages - 1)}"
+                            th:classappend="${comments.pageable.pageNumber == i ? 'active' : ''}">
+                            <a th:href="@{'/board/' + ${board.bIdx} + '?page=' + ${i}}" class="page-link">[[${i +
+                                1}]]</a>
+                        </li>
+                        <li th:classappend="${comments.hasNext() ? '' : 'disabled'}">
+                            <a th:href="@{'/board/' + ${board.bIdx} + '?page=' + ${comments.pageable.pageNumber + 1}}"
+                                class="page-link">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </section>
+    </main>
+
+    <footer class="board-footer">
+        <a href="/board" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            목록으로 돌아가기
+        </a>
+    </footer>
 </body>
 
 </html>

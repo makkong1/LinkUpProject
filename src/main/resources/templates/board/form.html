@@ -1,86 +1,185 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<head>
-    <title>게시글 작성</title>
 
-    <!-- CSS 추가 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" th:href="@{/js/css/b-form.css}">
-    <!-- CSRF 토큰을 메타 태그에 추가 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 작성</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/js/css/B_view.css}">
     <script src="/js/Js/session-timer2.js"></script>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/js/Js/ssenotification.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const userId = $('#userId').data('username'); // HTML에서 userId를 가져온다고 가정
-             if (userId && userId !== 'Anonymous') {  // 익명일 경우 SSE 연결 안 함
+            const userId = $('#userId').data('username');
+            if (userId && userId !== 'Anonymous') {
                 startSSENotifications(userId);
-             }
+            }
         });
     </script>
 </head>
+
 <body>
-<h1>게시글 작성</h1>
-<div th:replace="header :: header(${user})"></div>
-<div id="userId"
-     th:data-username="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}">
-</div>
+    <div th:replace="header :: header(${user})"></div>
+    <div id="userId" th:data-username="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}"></div>
 
-<form th:action="@{/board/save}" th:object="${board}" method="post" enctype="multipart/form-data">
-    <div class="form-group">
-        <label for="writer">작성자:</label>
-        <input type="text" id="writer" class="form-control"
-               th:value="${isSocial ? user.name : user.uNickname}"
-               required readonly />
-    </div>
-    <div class="form-group">
-        <label for="b_category">카테고리:</label>
-        <select id="b_category" class="form-control" th:field="*{category}" required>
-            <option value="" disabled selected>카테고리 선택</option>
-            <option value="GENERAL" th:text="'일반'">일반</option>
-            <option value="INQUIRY" th:text="'문의'">문의</option>
-            <option value="NOTICE" th:text="'공지사항'"
-                    th:if="${isSocial ? user.authorities.contains('ROLE_ADMIN') : user.uRole == 'ADMIN'}">
-                공지사항</option>
+    <main class="board-container">
+        <header class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-pen"></i>
+                게시글 작성
+            </h1>
+            <p class="page-description">새로운 이야기를 공유해보세요</p>
+        </header>
 
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="b_title">제목:</label>
-        <input type="text" id="b_title" class="form-control" th:field="*{title}" required />
-    </div>
-    <div class="form-group">
-        <label for="b_content">내용:</label>
-        <textarea id="b_content" class="form-control" rows="5" th:field="*{content}" required></textarea>
-    </div>
-    <div class="form-group">
-        <label for="b_pwd">비밀번호:</label>
-        <input type="password" id="b_pwd" class="form-control" th:field="*{password}" required />
-    </div>
-    <div class="form-group">
-        <label for="b_files">파일 첨부:</label>
-        <div class="file-upload">
-            <i class="fas fa-upload"></i> 파일을 여기에 끌어다 놓으세요
+        <div class="form-container">
+            <form th:action="@{/board/save}" th:object="${board}" method="post" enctype="multipart/form-data"
+                class="board-form">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user"></i>
+                        작성자 정보
+                    </h3>
+                    <div class="form-group">
+                        <label for="writer">작성자</label>
+                        <input type="text" id="writer" th:value="${isSocial ? user.name : user.uNickname}" required
+                            readonly />
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-tags"></i>
+                        게시글 정보
+                    </h3>
+                    <div class="form-group">
+                        <label for="b_category">카테고리</label>
+                        <select id="b_category" th:field="*{category}" required>
+                            <option value="" disabled selected>카테고리를 선택해주세요</option>
+                            <option value="GENERAL" th:text="'일반'">일반</option>
+                            <option value="INQUIRY" th:text="'문의'">문의</option>
+                            <option value="NOTICE" th:text="'공지사항'"
+                                th:if="${isSocial ? user.authorities.contains('ROLE_ADMIN') : user.uRole == 'ADMIN'}">
+                                공지사항</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="b_title">제목</label>
+                        <input type="text" id="b_title" th:field="*{title}" placeholder="제목을 입력해주세요" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="b_content">내용</label>
+                        <textarea id="b_content" th:field="*{content}" rows="10" placeholder="내용을 입력해주세요"
+                            required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-lock"></i>
+                        보안 설정
+                    </h3>
+                    <div class="form-group">
+                        <label for="b_pwd">비밀번호</label>
+                        <input type="password" id="b_pwd" th:field="*{password}" placeholder="게시글 수정/삭제 시 사용할 비밀번호"
+                            required />
+                        <small class="form-help">게시글 수정이나 삭제 시 필요합니다.</small>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-paperclip"></i>
+                        파일 첨부
+                    </h3>
+                    <div class="form-group">
+                        <label for="b_files">파일 첨부</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <div class="file-upload-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p class="upload-text">파일을 여기에 끌어다 놓거나 클릭하여 선택하세요</p>
+                                <p class="upload-hint">최대 10MB까지 업로드 가능합니다</p>
+                            </div>
+                            <input type="file" id="b_files" name="files" multiple style="display:none" />
+                        </div>
+                        <div class="file-list" id="fileList"></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        게시글 작성
+                    </button>
+                    <a href="/board" class="cancel-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        목록으로 돌아가기
+                    </a>
+                </div>
+            </form>
         </div>
-        <input type="file" id="b_files" name="files" multiple style="display:none" />
-    </div>
-    <button type="submit" class="btn btn-primary">작성하기</button>
-</form>
+    </main>
 
-<a href="/board">목록으로 돌아가기</a>
+    <script>
+        // 파일 업로드 영역 클릭 시 파일 선택창 열기
+        document.getElementById('fileUploadArea').addEventListener('click', function () {
+            document.getElementById('b_files').click();
+        });
 
-<script>
-    // 파일 업로드 필드 클릭 시 파일 선택창 열기
-    document.querySelector('.file-upload').addEventListener('click', function () {
-        document.getElementById('b_files').click();
-    });
-</script>
+        // 드래그 앤 드롭 기능
+        const fileUploadArea = document.getElementById('fileUploadArea');
 
+        fileUploadArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('drag-over');
+        });
+
+        fileUploadArea.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+        });
+
+        fileUploadArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            document.getElementById('b_files').files = files;
+            updateFileList(files);
+        });
+
+        // 파일 선택 시 파일 목록 업데이트
+        document.getElementById('b_files').addEventListener('change', function (e) {
+            updateFileList(e.target.files);
+        });
+
+        function updateFileList(files) {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            if (files.length > 0) {
+                fileList.innerHTML = '<h4>선택된 파일:</h4>';
+                Array.from(files).forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <i class="fas fa-file"></i>
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            }
+        }
+    </script>
 </body>
+
 </html>

@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 목록</title>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/js/Js/session-timer2.js"></script>
     <script src="/js/Js/ssenotification.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <link rel="stylesheet" th:href="@{/js/css/b-list.css}"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/js/css/B_view.css}" />
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -90,83 +93,142 @@
         });
     </script>
 </head>
+
 <body>
+    <!-- 헤더 -->
+    <div th:replace="header :: header(${user})"></div>
 
-<!-- 헤더 -->
-<div th:replace="header :: header(${user})"></div>
+    <div id="userId" th:data-username="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}"></div>
 
-<div id="userId" th:data-username="${user != null ? (isSocial ? user.name : user.uNickname) : 'Anonymous'}"></div>
+    <main class="board-container">
+        <header class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-list"></i>
+                게시글 목록
+            </h1>
+            <p class="page-description">커뮤니티의 다양한 이야기를 확인해보세요</p>
+        </header>
 
-<h1>게시글 목록</h1>
+        <div class="board-list-container">
+            <div class="board-list-header">
+                <div class="list-stats">
+                    <span class="total-count">
+                        <i class="fas fa-file-alt"></i>
+                        총 <strong th:text="${boardPage.totalElements}">0</strong>개의 게시글
+                    </span>
+                </div>
+                <div class="list-actions">
+                    <a href="/board/new" class="write-btn">
+                        <i class="fas fa-pen"></i>
+                        새 글 작성
+                    </a>
+                </div>
+            </div>
 
-<a href="/board/new" class="new-post-link">새 게시글 작성</a>
+            <div class="search-section">
+                <div class="search-container">
+                    <div class="search-form">
+                        <select id="search" class="search-select">
+                            <option value="all">전체보기</option>
+                            <option value="title">제목</option>
+                            <option value="content">내용</option>
+                            <option value="writer">작성자</option>
+                        </select>
+                        <div class="search-input-group">
+                            <input id="input_text" type="text" placeholder="검색어를 입력해주세요" class="search-input" />
+                            <button onclick="textSearch();" class="search-btn">
+                                <i class="fas fa-search"></i>
+                                검색
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<div class="search-container">
-    <select id="search">
-        <option value="all">전체보기</option>
-        <option value="title">제목</option>
-        <option value="content">내용</option>
-        <option value="writer">작성자</option>
-    </select>
-    <input id="input_text" type="text" placeholder="검색어를 입력해주세요"/>
-    <button onclick="textSearch();">검색</button>
-</div>
+            <div class="board-list">
+                <div th:each="board, iterStat : ${boardPage.content}" th:if="${board != null}" class="board-item"
+                    th:style="'animation-delay: ' + ${iterStat.index * 0.1} + 's'">
+                    <div class="board-number">
+                        <span th:text="${board.bIdx}">번호</span>
+                    </div>
+                    <div class="board-content">
+                        <div class="board-title-section">
+                            <h3 class="board-title">
+                                <a th:href="@{/board/{id}(id=${board.bIdx})}" th:text="${board.title}">제목</a>
+                            </h3>
+                            <div class="board-category">
+                                <span th:if="${board.category == 'GENERAL'}" class="category-badge general">일반</span>
+                                <span th:if="${board.category == 'INQUIRY'}" class="category-badge inquiry">문의</span>
+                                <span th:if="${board.category == 'NOTICE'}" class="category-badge notice">공지사항</span>
+                            </div>
+                        </div>
+                        <div class="board-meta">
+                            <span class="board-author">
+                                <i class="fas fa-user"></i>
+                                <span th:text="${board.writerName}">작성자</span>
+                            </span>
+                            <span class="board-date">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="${#temporals.format(board.uploadTime, 'yyyy-MM-dd')}">작성일</span>
+                            </span>
+                            <span class="board-stats">
+                                <i class="fas fa-eye"></i>
+                                <span th:text="${board.viewCount}">0</span>
+                                <i class="fas fa-thumbs-up"></i>
+                                <span th:text="${board.likeCount}">0</span>
+                                <i class="fas fa-thumbs-down"></i>
+                                <span th:text="${board.dislikeCount}">0</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="board-actions">
+                        <a th:href="@{/board/{id}(id=${board.bIdx})}" class="view-btn">
+                            <i class="fas fa-eye"></i>
+                            보기
+                        </a>
+                        <button class="report-btn report-button" th:data-idx="${board.bIdx}">
+                            <i class="fas fa-flag"></i>
+                            신고
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-<table class="table table-bordered mt-3">
-    <thead class="thead-light">
-    <tr>
-        <th>번호</th>
-        <th>제목</th>
-        <th>카테고리</th>
-        <th>작성자</th>
-        <th>등록일</th>
-        <th>조회 수</th>
-        <th>좋아요</th>
-        <th>싫어요</th>
-        <th>작업</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="board : ${boardPage.content}" th:if="${board != null}">
-        <td th:text="${board.bIdx}">순번</td>
-        <td>
-            <a th:href="@{/board/{id}(id=${board.bIdx})}" th:text="${board.title}">제목</a>
-        </td>
-        <td>
-            <span th:if="${board.category == 'GENERAL'}">일반</span>
-            <span th:if="${board.category == 'INQUIRY'}">문의</span>
-            <span th:if="${board.category == 'NOTICE'}"
-                  style="color: white; background-color: #007bff; padding: 3px 8px; border-radius: 5px;">
-                공지사항
-            </span>
-        </td>
-        <td th:text="${board.writerName}">작성자</td>
-        <td th:text="${#temporals.format(board.uploadTime, 'yyyy-MM-dd')}">작성일</td>
-        <td th:text="${board.viewCount}">조회 수</td>
-        <td th:text="${board.likeCount}">좋아요</td>
-        <td th:text="${board.dislikeCount}">싫어요</td>
-        <td>
-            <button class="btn btn-sm btn-danger report-button" th:data-idx="${board.bIdx}">신고</button>
-        </td>
-    </tr>
-    </tbody>
-</table>
+            <div th:if="${boardPage.content.isEmpty()}" class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h3>아직 게시글이 없습니다</h3>
+                <p>첫 번째 게시글을 작성해보세요!</p>
+                <a href="/board/new" class="write-first-btn">
+                    <i class="fas fa-pen"></i>
+                    첫 글 작성하기
+                </a>
+            </div>
+        </div>
 
-<!-- 페이징 -->
-<div class="pagination-container" th:if="${boardPage.totalPages >= 1}">
-    <ul class="pagination justify-content-center">
-        <li th:classappend="${boardPage.hasPrevious()} ? '' : 'disabled'" class="page-item">
-            <a th:href="@{/board(page=${boardPage.pageable.pageNumber - 1})}" class="page-link">&laquo;</a>
-        </li>
-        <li th:each="i : ${#numbers.sequence(0, boardPage.totalPages - 1)}"
-            th:classappend="${boardPage.pageable.pageNumber == i} ? 'active' : ''" class="page-item">
-            <a th:href="@{/board(page=${i})}" class="page-link" th:text="${i + 1}">1</a>
-        </li>
-        <li th:classappend="${boardPage.hasNext()} ? '' : 'disabled'" class="page-item">
-            <a th:href="@{/board(page=${boardPage.pageable.pageNumber + 1})}" class="page-link">&raquo;</a>
-        </li>
-    </ul>
-</div>
-
+        <!-- 페이징 -->
+        <div class="pagination-container" th:if="${boardPage.totalPages >= 1}">
+            <nav class="pagination-nav">
+                <ul class="pagination">
+                    <li th:classappend="${boardPage.hasPrevious()} ? '' : 'disabled'">
+                        <a th:href="@{/board(page=${boardPage.pageable.pageNumber - 1})}" class="page-link">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li th:each="i : ${#numbers.sequence(0, boardPage.totalPages - 1)}"
+                        th:classappend="${boardPage.pageable.pageNumber == i} ? 'active' : ''">
+                        <a th:href="@{/board(page=${i})}" class="page-link" th:text="${i + 1}">1</a>
+                    </li>
+                    <li th:classappend="${boardPage.hasNext()} ? '' : 'disabled'">
+                        <a th:href="@{/board(page=${boardPage.pageable.pageNumber + 1})}" class="page-link">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </main>
 </body>
+
 </html>
