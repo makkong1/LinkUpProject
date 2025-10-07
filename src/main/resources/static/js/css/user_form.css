@@ -1,134 +1,48 @@
-/* 전역 스타일 */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-    margin: 0;
-    padding: 0;
+/* Theme tokens for user form */
+:root {
+    --uf-bg: #f7f8fa;
+    --uf-surface: #ffffff;
+    --uf-text-main: #22223b;
+    --uf-text-sub: #6c757d;
+    --uf-border: #e5e7eb;
+    --uf-shadow: 0 4px 24px 0 rgba(0,0,0,0.07);
+    --uf-primary: #4f8cff;
+    --uf-primary-hover: #38b6ff;
 }
 
-/* 페이지 컨테이너 */
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
+:root[data-theme='dark'] {
+    --uf-bg: #181a1b;
+    --uf-surface: #23262b;
+    --uf-text-main: #f1f3f5;
+    --uf-text-sub: #b0b8c1;
+    --uf-border: #343a40;
+    --uf-shadow: 0 4px 24px 0 rgba(0,0,0,0.25);
+    --uf-primary: #7ab8ff;
+    --uf-primary-hover: #38b6ff;
 }
 
-/* 폼 스타일 */
-form {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    margin: auto;
-}
+body { font-family: 'Noto Sans KR', 'Noto Sans', sans-serif; background: var(--uf-bg); color: var(--uf-text-main); margin:0; }
 
-/* 타이틀 스타일 */
-h1 {
-    text-align: center;
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-}
-
-/* 입력 필드 스타일 */
-input[type="text"],
-input[type="password"],
-input[type="email"],
-input[type="date"] {
-    width: 95%;
-    padding: 10px;
-    border: 2px solid #ddd;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-}
-
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="email"]:focus,
-input[type="date"]:focus {
-    outline: none;
-    border-color: #007BFF;
-}
-
-/* 버튼 스타일 */
-button {
-    width: 100%;
-    padding: 10px;
-    font-size: 1.2rem;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-/* 중복 확인 버튼 스타일 */
-button.check-duplicate {
-    width: auto;
-    background-color: #28a745;
-    margin-left: 10px;
-}
-
-button.check-duplicate:hover {
-    background-color: #218838;
-}
-
-div{
-    display: inline;
-}
-
-/* 입력 필드에 아이콘 넣기 */
-div.input-group {
-    position: relative;
-}
-
-div.input-group input {
-    padding-left: 35px;
-}
-
-/* 아이콘 스타일 */
-div.input-group i {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #007BFF;
-}
-
-/* 경고 메시지 */
-.alert {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 10px;
-    margin-top: 10px;
-    border: 1px solid #f5c6cb;
-    border-radius: 5px;
-    display: none;
-}
-
-a {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    color: #007BFF;
-    text-decoration: none;
-}
-
-a:hover {
-    color: #0056b3;
-}
-
-/* 숨김 처리 */
-.hidden {
-    display: none;
-}
+.uf-container { max-width: 700px; margin: 40px auto 0 auto; padding: 0 16px; }
+.uf-card { background: var(--uf-surface); border-radius: 18px; box-shadow: var(--uf-shadow); overflow: hidden; }
+.uf-header { border-bottom: 1px solid var(--uf-border); padding: 22px; }
+.uf-title { margin:0; font-size: 1.7rem; font-weight: 700; display:flex; align-items:center; gap:10px; }
+.uf-form { padding: 18px; }
+.uf-field { display:flex; flex-direction:column; gap:6px; margin-bottom: 12px; }
+.uf-field label { color: var(--uf-text-main); font-weight: 600; }
+.uf-field input[type="text"],
+.uf-field input[type="password"],
+.uf-field input[type="email"],
+.uf-field input[type="date"] { width:100%; border:1px solid var(--uf-border); background:#fff; color: var(--uf-text-main); border-radius: 8px; padding: 10px 12px; }
+:root[data-theme='dark'] .uf-field input[type="text"],
+:root[data-theme='dark'] .uf-field input[type="password"],
+:root[data-theme='dark'] .uf-field input[type="email"],
+:root[data-theme='dark'] .uf-field input[type="date"] { background:#23262b; }
+.uf-field input:focus { outline:none; border-color: var(--uf-primary); }
+.uf-inline-btn { margin-left: 8px; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--uf-border); background: var(--uf-surface); color: var(--uf-text-main); border-radius: 20px; padding: 6px 10px; cursor:pointer; }
+.uf-inline-btn:hover { text-decoration: underline; }
+.uf-actions { display:flex; gap:10px; justify-content: flex-end; padding-top: 6px; }
+.uf-submit { background: linear-gradient(90deg, var(--uf-primary) 0%, var(--uf-primary-hover) 100%); color:#fff; border:none; border-radius: 22px; padding: 10px 18px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px 0 rgba(79, 140, 255, 0.08); }
+.uf-submit:hover { background: linear-gradient(90deg, var(--uf-primary-hover) 0%, var(--uf-primary) 100%); }
+.uf-cancel { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--uf-border); border-radius: 22px; padding: 10px 16px; color: var(--uf-text-main); text-decoration:none; }
+.uf-cancel:hover { text-decoration: underline; }

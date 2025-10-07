@@ -1,36 +1,136 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 목록</title>
-
-    <!-- CSRF 토큰을 메타 태그에 추가 -->
     <script src="/js/Js/session-timer2.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script> <!-- Toastify 알림 라이브러리 -->
-
-
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/js/css/B_view.css}">
     <!-- CSRF 토큰을 메타 태그에 추가 -->
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <script>
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = savedTheme || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { }
+        })();
+    </script>
 </head>
+
 <body>
-<div th:replace="header :: header(${user})"></div>
-<div class="container">
-    <h1 class="mt-5">게시글 목록</h1>
-    <table class="table">
-        <tr>
-            <th scope="col">번호</th>
-            <th scope="col">제목</th>
-            <th scope="col">작성자</th>
-            <th scope="col">등록일</th>
-        </tr>
-        <tr th:each="board : ${boards}">
-            <td th:text="${board.b_idx}"></td> <!-- 게시글 번호 -->
-            <td th:text="${board.b_title}"></td> <!-- 게시글 제목 -->
-            <td th:text="${board.b_writer}"></td> <!-- 작성자 -->
-            <td th:text="${#dates.format(board.b_upload, 'yyyy-MM-dd')}"></td> <!-- 작성일 -->
-        </tr>
-    </table>
-</div>
+    <div th:replace="header :: header(${user})"></div>
+
+    <main class="board-container">
+        <header class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-list"></i>
+                게시글 목록
+            </h1>
+            <p class="page-description">커뮤니티의 다양한 이야기를 확인해보세요</p>
+            <button type="button" id="themeToggle" class="write-btn" style="margin-left:auto" aria-label="테마 전환">
+                <i class="fas fa-moon"></i>
+                <span class="toggle-text">다크 모드</span>
+            </button>
+        </header>
+
+        <div class="board-list-container">
+            <div class="board-list-header">
+                <div class="list-stats">
+                    <span class="total-count">
+                        <i class="fas fa-file-alt"></i>
+                        총 <strong th:text="${boards.size()}">0</strong>개의 게시글
+                    </span>
+                </div>
+                <div class="list-actions">
+                    <a href="/board/form" class="write-btn">
+                        <i class="fas fa-pen"></i>
+                        글쓰기
+                    </a>
+                </div>
+            </div>
+
+            <div class="board-list">
+                <div th:each="board, iterStat : ${boards}" class="board-item"
+                    th:style="'animation-delay: ' + ${iterStat.index * 0.1} + 's'">
+                    <div class="board-number">
+                        <span th:text="${board.b_idx}">번호</span>
+                    </div>
+                    <div class="board-content">
+                        <h3 class="board-title">
+                            <a th:href="@{'/board/' + ${board.b_idx}}" th:text="${board.b_title}">제목</a>
+                        </h3>
+                        <div class="board-meta">
+                            <span class="board-author">
+                                <i class="fas fa-user"></i>
+                                <span th:text="${board.b_writer}">작성자</span>
+                            </span>
+                            <span class="board-date">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="${#dates.format(board.b_upload, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="board-actions">
+                        <a th:href="@{'/board/' + ${board.b_idx}}" class="view-btn">
+                            <i class="fas fa-eye"></i>
+                            보기
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${boards.isEmpty()}" class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h3>아직 게시글이 없습니다</h3>
+                <p>첫 번째 게시글을 작성해보세요!</p>
+                <a href="/board/form" class="write-first-btn">
+                    <i class="fas fa-pen"></i>
+                    첫 글 작성하기
+                </a>
+            </div>
+        </div>
+    </main>
+    <script>
+        (function () {
+            var toggleBtn = document.getElementById('themeToggle');
+            if (!toggleBtn) return;
+            function updateToggleUi() {
+                var isDark = (document.documentElement.getAttribute('data-theme') === 'dark');
+                var icon = toggleBtn.querySelector('i');
+                var text = toggleBtn.querySelector('.toggle-text');
+                if (isDark) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    if (text) text.textContent = '라이트 모드';
+                    toggleBtn.setAttribute('aria-label', '라이트 모드로 전환');
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                    if (text) text.textContent = '다크 모드';
+                    toggleBtn.setAttribute('aria-label', '다크 모드로 전환');
+                }
+            }
+            updateToggleUi();
+            toggleBtn.addEventListener('click', function () {
+                var current = document.documentElement.getAttribute('data-theme') || 'light';
+                var next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                try { localStorage.setItem('theme', next); } catch (e) { }
+                updateToggleUi();
+            });
+        })();
+    </script>
 </body>
+
 </html>
