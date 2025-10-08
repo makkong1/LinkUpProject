@@ -1,6 +1,8 @@
 package kh.link_up.repository;
 
 import kh.link_up.domain.Comment;
+import lombok.NonNull;
+
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,12 +18,11 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     Page<Comment> findByWriterContaining(String writer, Pageable pageable);
 
     // 내용 검색 (FullText)
-    @Query(value = "SELECT * FROM comment WHERE MATCH(c_content) AGAINST(:content IN BOOLEAN MODE)",
-            countQuery = "SELECT COUNT(*) FROM comment WHERE MATCH(c_content) AGAINST(:content IN BOOLEAN MODE)",
-            nativeQuery = true)
+    @Query(value = "SELECT * FROM comment WHERE MATCH(c_content) AGAINST(:content IN BOOLEAN MODE)", countQuery = "SELECT COUNT(*) FROM comment WHERE MATCH(c_content) AGAINST(:content IN BOOLEAN MODE)", nativeQuery = true)
     Page<Comment> findByContentContaining(@Param("content") String content, Pageable pageable);
 
-    Page<Comment> findAll(Pageable pageable);
+    @NonNull
+    Page<Comment> findAll(@NonNull Pageable pageable);
 
     @Query("select c from Comment c where c.board.bIdx = :bIdx")
     Page<Comment> findCommentByBIdx(@Param("bIdx") Long bIdx, Pageable pageable);

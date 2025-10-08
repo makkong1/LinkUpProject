@@ -26,21 +26,15 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     private static final String ACCOUNT_LOCKED_MESSAGE = "계정이 잠겼습니다. 관리자에게 문의하거나 비밀번로를 변경하세요";
 
     // 생성자로 OAuth2AuthorizedClientService와 UsersRepository를 주입받습니다.
-    public CustomAuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService, UsersRepository usersRepository) {
+    public CustomAuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService,
+            UsersRepository usersRepository) {
         this.authorizedClientService = authorizedClientService;
         this.usersRepository = usersRepository;
     }
 
-//    @Override
-//    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-//                                        FilterChain chain, Authentication authentication) throws IOException, ServletException {
-//        // 인증 성공시 처리
-//        onAuthenticationSuccess(request, response, authentication);
-//    }
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+            Authentication authentication) throws IOException, ServletException {
         // 인증된 사용자의 정보 가져오기
         String errorMessage = "";
         String username = authentication.getName();
@@ -71,8 +65,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             // OAuth2AuthorizedClient 가져오기
             OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
                     oauth2Authentication.getAuthorizedClientRegistrationId(),
-                    oauth2Authentication.getName()
-            );
+                    oauth2Authentication.getName());
 
             if (authorizedClient != null) {
                 // OAuth2AccessToken을 가져옵니다.
@@ -81,8 +74,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                 if (accessToken != null) {
                     // Access Token 로그 찍기
                     log.info("Access Token: {}", accessToken.getTokenValue());
-                } else {
-                    log.warn("No Access Token found.");
                 }
             } else {
                 log.warn("No OAuth2AuthorizedClient found.");
@@ -90,10 +81,11 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         // 사용자의 역할에 따라 리다이렉트 URL 설정
-        if (role.contains("ROLE_ADMIN") || role.contains("ROLE_SUB_ADMIN") || role.contains("ADMIN") || role.contains("SUB_ADMIN")) {
-            response.sendRedirect("/admin");  // 관리자 대시보드로 리다이렉트
+        if (role.contains("ROLE_ADMIN") || role.contains("ROLE_SUB_ADMIN") || role.contains("ADMIN")
+                || role.contains("SUB_ADMIN")) {
+            response.sendRedirect("/admin"); // 관리자 대시보드로 리다이렉트
         } else if (role.contains("USER") || role.contains("ROLE_USER")) {
-            response.sendRedirect("/board");  // 사용자 대시보드로 리다이렉트
+            response.sendRedirect("/board"); // 사용자 대시보드로 리다이렉트
         }
 
         // 로그인 성공 시 사용자 정보 업데이트: 로그인 실패 횟수 초기화 및 계정 잠금 해제

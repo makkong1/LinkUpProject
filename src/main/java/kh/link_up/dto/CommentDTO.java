@@ -18,14 +18,14 @@ public class CommentDTO {
     private String c_username;
     private Long b_idx;
     private java.sql.Timestamp c_upLoad;
+    @Builder.Default
     private boolean c_deleted = false;
     private Integer c_like;
     private Integer c_dislike;
     private int c_report;
     private SocialUser socialUser;
 
-    //이거는 소셜유저때문에 쓰는거임 그 실제 db컬럼은 아님
+    // 이거는 소셜유저때문에 쓰는거임 그 실제 db컬럼은 아님
     @JsonProperty("uEmail")
     private String uEmail;
 }
-

@@ -62,18 +62,22 @@ public class Users {
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @ToString.Exclude // 순환 참조 방지
+    @Builder.Default
     private List<Board> board = new ArrayList<>();
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @ToString.Exclude // 순환 참조 방지
+    @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @ToString.Exclude // 순환 참조 방지
+    @Builder.Default
     private List<Notion> notions = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @ToString.Exclude // 순환 참조 방지
+    @Builder.Default
     private List<SocialUser> socialUser = new ArrayList<>();
 
     // 소셜 유저인지 일반 유저인지 판단할 수 있는 메서드
@@ -86,6 +90,4 @@ public class Users {
         this.failedLoginAttempts++;
     }
 
-    public void setUBlockReason(String blockReason) {
-    }
 }
