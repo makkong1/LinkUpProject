@@ -39,8 +39,6 @@ public class CommentController {
     private final LikeDislikeUtil likeDislikeUtil;
     private final CommentNotificationSubscriber notificationSubscriber;
     private final CommentConverter commentConverter;
-    // private final Map<String, SseEmitter> clientConnections = new
-    // ConcurrentHashMap<>();
 
     @Operation(summary = "댓글 작성", description = "댓글을 작성하고 작성된 댓글 정보를 반환합니다.")
     @ApiResponses(value = {
