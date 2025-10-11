@@ -11,8 +11,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 @Slf4j
 public class CustomClientRegistrationRepository {
 
-// OAuth2 클라이언트 등록 정보를 In-Memory에 등록하는 설정 클래스
-// 로그인을 위한 설정
+    // OAuth2 클라이언트 등록 정보를 In-Memory에 등록하는 설정 클래스
 
     private final SocialClientRegistration socialClientRegistration;
 
@@ -33,6 +32,7 @@ public class CustomClientRegistrationRepository {
         log.info("✅ Google ClientRegistration 등록: clientId={}, redirectUri={}",
                 google.getClientId(), google.getRedirectUri());
 
-        return new InMemoryClientRegistrationRepository(socialClientRegistration.naverClientRegistration(), socialClientRegistration.googleClientRegistration());
+        return new InMemoryClientRegistrationRepository(socialClientRegistration.naverClientRegistration(),
+                socialClientRegistration.googleClientRegistration());
     }
 }

@@ -147,19 +147,39 @@
         <script>
             (function () {
                 try {
-                    if (!document.documentElement.getAttribute('data-theme')) {
-                        var savedTheme = localStorage.getItem('theme');
-                        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                        var theme = savedTheme || (prefersDark ? 'dark' : 'light');
-                        document.documentElement.setAttribute('data-theme', theme);
-                    }
-                } catch (e) { }
+                    // 현재 data-theme 확인
+                    console.log("[Theme Debug] 초기 data-theme:", document.documentElement.getAttribute('data-theme'));
+
+                    // 로컬스토리지에서 저장된 테마 가져오기
+                    var savedTheme = localStorage.getItem('theme');
+                    console.log("[Theme Debug] localStorage theme:", savedTheme);
+
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var theme = savedTheme || (prefersDark ? 'dark' : 'light');
+                    console.log("[Theme Debug] 적용할 테마:", theme);
+
+                    document.documentElement.setAttribute('data-theme', theme);
+                    console.log("[Theme Debug] 적용 후 data-theme:", document.documentElement.getAttribute('data-theme'));
+                } catch (e) {
+                    console.error("[Theme Debug] 초기 테마 적용 에러:", e);
+                }
+
+                // 토글 버튼 선택
                 var toggleBtn = document.getElementById('globalThemeToggle');
-                if (!toggleBtn) return;
+                if (!toggleBtn) {
+                    console.warn("[Theme Debug] 토글 버튼을 찾을 수 없음!");
+                    return;
+                }
+                console.log("[Theme Debug] 토글 버튼 발견:", toggleBtn);
+
                 function updateToggleUi() {
-                    var isDark = (document.documentElement.getAttribute('data-theme') === 'dark');
+                    var currentTheme = document.documentElement.getAttribute('data-theme');
+                    var isDark = (currentTheme === 'dark');
                     var icon = toggleBtn.querySelector('i');
                     var text = toggleBtn.querySelector('.toggle-text');
+
+                    console.log("[Theme Debug] updateToggleUi 실행, 현재 테마:", currentTheme);
+
                     if (isDark) {
                         icon.classList.remove('fa-moon');
                         icon.classList.add('fa-sun');
@@ -172,12 +192,24 @@
                         toggleBtn.setAttribute('aria-label', '다크 모드로 전환');
                     }
                 }
+
                 updateToggleUi();
+
                 toggleBtn.addEventListener('click', function () {
                     var current = document.documentElement.getAttribute('data-theme') || 'light';
                     var next = current === 'dark' ? 'light' : 'dark';
-                    document.documentElement.setAttribute('data-theme', next);
-                    try { localStorage.setItem('theme', next); } catch (e) { }
+                    console.log("[Theme Debug] 버튼 클릭, 현재:", current, " -> 변경:", next);
+
+                    try {
+                        document.documentElement.setAttribute('data-theme', next);
+                        localStorage.setItem('theme', next);
+                    } catch (e) {
+                        console.error("[Theme Debug] 테마 변경 에러:", e);
+                    }
+
+                    console.log("[Theme Debug] 클릭 후 data-theme:", document.documentElement.getAttribute('data-theme'));
+                    console.log("[Theme Debug] 클릭 후 localStorage:", localStorage.getItem('theme'));
+
                     updateToggleUi();
                 });
             })();

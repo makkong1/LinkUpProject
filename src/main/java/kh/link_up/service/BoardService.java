@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor_ = { @Autowired })
 @Slf4j
 @Transactional
 public class BoardService {
@@ -38,8 +38,8 @@ public class BoardService {
     // 전체게시글가져오기 (사용자 전용)
     public Page<BoardListDTO> getAllPagesBoardsForUsers(String selectValue, String text, Pageable pageable) {
         // 공지사항(NOTICE) 게시글을 먼저 가져옵니다.
-        BoardListDTOWrapper noticeBoardWrapper = boardCacheService.getNoticeBoard();  // 이제 BoardListDTOWrapper 객체를 반환
-        List<BoardListDTO> noticeBoards = noticeBoardWrapper.getBoardListDTO();  // BoardListDTO 리스트 가져오기
+        BoardListDTOWrapper noticeBoardWrapper = boardCacheService.getNoticeBoard(); // 이제 BoardListDTOWrapper 객체를 반환
+        List<BoardListDTO> noticeBoards = noticeBoardWrapper.getBoardListDTO(); // BoardListDTO 리스트 가져오기
 
         // 검색 조건을 확인하여 필터링된 게시글을 가져옵니다.
         Page<Board> filteredBoards;
@@ -51,14 +51,14 @@ public class BoardService {
         }
 
         // 나머지 게시글을 BoardListDTO로 변환
-        List<BoardListDTO> allBoards = new ArrayList<>(noticeBoards);  // 공지사항은 이미 BoardListDTO
-        allBoards.addAll(filteredBoards.getContent().stream().map(BoardListDTO::new).toList());  // 나머지 게시글도 DTO로 변환
+        List<BoardListDTO> allBoards = new ArrayList<>(noticeBoards); // 공지사항은 이미 BoardListDTO
+        allBoards.addAll(filteredBoards.getContent().stream().map(BoardListDTO::new).toList()); // 나머지 게시글도 DTO로 변환
 
         // 합쳐진 게시글 리스트를 다시 Page 객체로 변환
         return new PageImpl<>(allBoards, pageable, filteredBoards.getTotalElements());
     }
 
-    // 게시글  조회 메서드
+    // 게시글 조회 메서드
     @Transactional(readOnly = true)
     public Optional<BoardDTO> getBoardById(Long id) {
         return boardRepository.findById(id)
@@ -72,11 +72,11 @@ public class BoardService {
         boardRepository.incrementViewCount(id);
     }
 
-    //게시글 삭제
+    // 게시글 삭제
     public void deleteBoard(Long id) {
         boardRepository.findById(id).ifPresent(board -> {
             // 공지사항이면 캐시 삭제
-            //equalsIgnoreCase : str1과 str2의 내용이 대소문자 무시하고 같으면 true 반환
+            // equalsIgnoreCase : str1과 str2의 내용이 대소문자 무시하고 같으면 true 반환
             if ("NOTICE".equalsIgnoreCase(board.getCategory())) {
                 boardCacheService.clearNoticeBoardCache();
                 log.debug("공지사항 삭제됨 - 캐시 무효화 수행");
@@ -119,16 +119,18 @@ public class BoardService {
         };
     }
 
-//    게시글 페이징 가져오기 (유저용)
-//    public Page<Board> getFilteredBoardsForUser(String selectValue, String text, Pageable pageable) {
-//        selectValue = selectValue.trim();
-//        text = text.trim();
-//
-//        // 검색 조건을 한 메소드에서 처리
-//        return boardRepository.searchByCriteria(selectValue, text, "INQUIRY", pageable);
-//    }
+    // 게시글 페이징 가져오기 (유저용)
+    // public Page<Board> getFilteredBoardsForUser(String selectValue, String text,
+    // Pageable pageable) {
+    // selectValue = selectValue.trim();
+    // text = text.trim();
+    //
+    // // 검색 조건을 한 메소드에서 처리
+    // return boardRepository.searchByCriteria(selectValue, text, "INQUIRY",
+    // pageable);
+    // }
 
-//  게시글 페이징 가져오기 (유저용) / 위에서 쓰이는 메서드
+    // 게시글 페이징 가져오기 (유저용) / 위에서 쓰이는 메서드
     public Page<Board> getFilteredBoardsForUser(String selectValue, String text, Pageable pageable) {
         selectValue = selectValue.trim();
         text = text.trim();
