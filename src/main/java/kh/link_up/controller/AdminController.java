@@ -52,7 +52,7 @@ public class AdminController {
             @RequestParam(value = "select_comment_value", defaultValue = "all_comment") String selectComment,
             @RequestParam(value = "text_comment", defaultValue = "") String textComment) {
 
-        Pageable boardPageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("uploadTime")));
+        Pageable boardPageable = PageRequest.of(page, size);
         Pageable commentPageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("cReport")));
 
         // 게시글 검색 기능
@@ -62,7 +62,7 @@ public class AdminController {
             model.addAttribute("boardList", boardList);
             log.info("admin Page board : {}", boardPageable.getPageNumber());
         } else {
-            boardList = boardService.getFilteredBoards(selectValue, text, boardPageable);
+            boardList = boardService.getFilteredBoardsCommon(selectValue, text, boardPageable, true);
             model.addAttribute("boardList", boardList);
         }
 

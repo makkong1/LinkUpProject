@@ -22,34 +22,61 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
         Page<Board> findAll(@NonNull Pageable pageable);
 
         // =======================
-        // 유저용 검색 (NativeQuery)
+        // 유저용 검색 (NativeQuery) / 인덱스 활용 / fulltext 검색
         // =======================
-        @Query(value = "SELECT * FROM board WHERE b_category <> :excludeCategory AND MATCH(b_title) AGAINST(:text IN BOOLEAN MODE)", countQuery = "SELECT COUNT(*) FROM board WHERE b_category <> :excludeCategory AND MATCH(b_title) AGAINST(:text IN BOOLEAN MODE)", nativeQuery = true)
+        @Query(value = "SELECT * FROM board WHERE b_category <> :excludeCategory AND MATCH(b_title) AGAINST(:text IN BOOLEAN MODE) ORDER BY b_upload DESC", countQuery = "SELECT COUNT(*) FROM board WHERE b_category <> :excludeCategory AND MATCH(b_title) AGAINST(:text IN BOOLEAN MODE)", nativeQuery = true)
         Page<Board> searchByTitleForUsers(@Param("text") String text,
                         @Param("excludeCategory") String excludeCategory,
                         Pageable pageable);
 
-        @Query(value = "SELECT * FROM board WHERE b_category <> :excludeCategory AND MATCH(b_content) AGAINST(:text IN BOOLEAN MODE)", countQuery = "SELECT COUNT(*) FROM board WHERE b_category <> :excludeCategory AND MATCH(b_content) AGAINST(:text IN BOOLEAN MODE)", nativeQuery = true)
+        @Query(value = "SELECT * FROM board WHERE b_category <> :excludeCategory AND MATCH(b_content) AGAINST(:text IN BOOLEAN MODE) ORDER BY b_upload DESC", countQuery = "SELECT COUNT(*) FROM board WHERE b_category <> :excludeCategory AND MATCH(b_content) AGAINST(:text IN BOOLEAN MODE)", nativeQuery = true)
         Page<Board> searchByContentForUsers(@Param("text") String text,
                         @Param("excludeCategory") String excludeCategory,
                         Pageable pageable);
 
-        @Query(value = "SELECT * FROM board WHERE b_category <> :excludeCategory AND b_writer LIKE CONCAT(:text, '%')", countQuery = "SELECT COUNT(*) FROM board WHERE b_category <> :excludeCategory AND b_writer LIKE CONCAT(:text, '%')", nativeQuery = true)
+        @Query(value = "SELECT * FROM board WHERE b_category <> :excludeCategory AND b_writer LIKE CONCAT(:text, '%') ORDER BY b_upload DESC", countQuery = "SELECT COUNT(*) FROM board WHERE b_category <> :excludeCategory AND b_writer LIKE CONCAT(:text, '%')", nativeQuery = true)
         Page<Board> searchByWriterForUsers(@Param("text") String text,
                         @Param("excludeCategory") String excludeCategory,
                         Pageable pageable);
 
+        // 검색: 제목 + 내용 통합 검색 (Fulltext) / 복합인덱스 활용 / 유저용
+        @Query(value = """
+                        SELECT * FROM board
+                        WHERE b_category <> :excludeCategory
+                          AND MATCH(b_title, b_content) AGAINST(:text IN BOOLEAN MODE)
+                        ORDER BY b_upload DESC
+                        """, countQuery = """
+                        SELECT COUNT(*) FROM board
+                        WHERE b_category <> :excludeCategory
+                          AND MATCH(b_title, b_content) AGAINST(:text IN BOOLEAN MODE)
+                        """, nativeQuery = true)
+        Page<Board> searchByTitleAndContentForUsers(
+                        @Param("text") String text,
+                        @Param("excludeCategory") String excludeCategory,
+                        Pageable pageable);
+
         // =======================
-        // 관리자용 검색 (NativeQuery)
+        // 관리자용 검색 (NativeQuery) / 인덱스 활용 / fulltext 검색
         // =======================
-        @Query(value = "SELECT * FROM board WHERE MATCH(b_title) AGAINST(:title IN BOOLEAN MODE)", countQuery = "SELECT COUNT(*) FROM board WHERE MATCH(b_title) AGAINST(:title IN BOOLEAN MODE)", nativeQuery = true)
+        @Query(value = "SELECT * FROM board WHERE MATCH(b_title) AGAINST(:title IN BOOLEAN MODE) ORDER BY b_upload DESC", countQuery = "SELECT COUNT(*) FROM board WHERE MATCH(b_title) AGAINST(:title IN BOOLEAN MODE)", nativeQuery = true)
         Page<Board> searchByTitle(@Param("title") String title, Pageable pageable);
 
-        @Query(value = "SELECT * FROM board WHERE b_writer LIKE CONCAT(:writer, '%')", countQuery = "SELECT COUNT(*) FROM board WHERE b_writer LIKE CONCAT(:writer, '%')", nativeQuery = true)
+        @Query(value = "SELECT * FROM board WHERE b_writer LIKE CONCAT(:writer, '%') ORDER BY b_upload DESC", countQuery = "SELECT COUNT(*) FROM board WHERE b_writer LIKE CONCAT(:writer, '%')", nativeQuery = true)
         Page<Board> searchByWriter(@Param("writer") String writer, Pageable pageable);
 
-        @Query(value = "SELECT * FROM board WHERE MATCH(b_content) AGAINST(:content IN BOOLEAN MODE)", countQuery = "SELECT COUNT(*) FROM board WHERE MATCH(b_content) AGAINST(:content IN BOOLEAN MODE)", nativeQuery = true)
+        @Query(value = "SELECT * FROM board WHERE MATCH(b_content) AGAINST(:content IN BOOLEAN MODE) ORDER BY b_upload DESC", countQuery = "SELECT COUNT(*) FROM board WHERE MATCH(b_content) AGAINST(:content IN BOOLEAN MODE)", nativeQuery = true)
         Page<Board> searchByContent(@Param("content") String content, Pageable pageable);
+
+        // 검색: 제목 + 내용 통합 검색 (Fulltext) / 복합인덱스 활용 / 관리자용
+        @Query(value = """
+                        SELECT * FROM board
+                        WHERE MATCH(b_title, b_content) AGAINST(:text IN BOOLEAN MODE)
+                        ORDER BY b_upload DESC
+                        """, countQuery = """
+                        SELECT COUNT(*) FROM board
+                        WHERE MATCH(b_title, b_content) AGAINST(:text IN BOOLEAN MODE)
+                        """, nativeQuery = true)
+        Page<Board> searchByTitleAndContentForAdmin(@Param("text") String text, Pageable pageable);
 
         @Modifying
         @Transactional
