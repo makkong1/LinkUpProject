@@ -1,52 +1,367 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
 <head>
     <meta charset="UTF-8">
-    <title>로그인 페이지</title>
-    <link rel="stylesheet" th:href="@{/js/css/login.css}">
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 | LinkUp 커뮤니티</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/js/Js/login.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/js/css/commonStyle.css}">
     <style>
+        /* Login Page Specific Styles */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow-lg);
+            padding: 3rem 2.5rem;
+            max-width: 450px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-subtitle {
+            color: var(--gray-600);
+            font-size: 1rem;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input {
+            padding: 1rem 1rem 1rem 3rem;
+            font-size: 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            background: var(--white);
+            color: var(--gray-800);
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group label {
+            position: absolute;
+            left: 3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-size: 1rem;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus+label,
+        .form-group input:not(:placeholder-shown)+label {
+            top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            background: var(--white);
+            padding: 0 0.5rem;
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-size: 1.1rem;
+        }
+
+        .login-btn {
+            background: var(--primary-gradient);
+            color: var(--white);
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow-lg);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .social-section {
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .social-divider {
+            position: relative;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .social-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--gray-300);
+        }
+
+        .social-divider span {
+            background: var(--white);
+            padding: 0 1rem;
+            color: var(--gray-500);
+            font-size: 0.9rem;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            text-align: center;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .social-btn.google {
+            color: #db4437;
+            border-color: #db4437;
+        }
+
+        .social-btn.google:hover {
+            background: #db4437;
+            color: var(--white);
+        }
+
+        .social-btn.naver {
+            color: #03c75a;
+            border-color: #03c75a;
+        }
+
+        .social-btn.naver:hover {
+            background: #03c75a;
+            color: var(--white);
+        }
+
+        .login-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .login-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .login-links a:hover {
+            text-decoration: underline;
+        }
+
         .error-message {
-        color: red;
-        font-weight: bold;
-        margin-top: 20px;
+            background: rgba(255, 107, 107, 0.1);
+            color: var(--danger-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--danger-color);
+            font-weight: 500;
+            margin-top: 1rem;
+            animation: slideInLeft 0.3s ease-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 1rem;
+            }
+
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .login-title {
+                font-size: 1.75rem;
+            }
+
+            .social-buttons {
+                flex-direction: column;
+            }
+
+            .login-links {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .login-title {
+                font-size: 1.5rem;
+            }
+
+            .login-icon {
+                font-size: 2.5rem;
+            }
         }
     </style>
-
 </head>
+
 <body>
-<!--<div class="header" th:replace="header :: header(${user})"></div>-->
-<main>
-    <h1>로그인</h1>
-    <form action="/login" method="post">
-        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+    <!-- 헤더 -->
+    <div th:replace="header :: header(${user})"></div>
 
-        <div class="form-group">
-            <input type="text" id="id" name="id" required>
-            <label for="id">아이디</label>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <h1 class="login-title">로그인</h1>
+                <p class="login-subtitle">LinkUp 커뮤니티에 오신 것을 환영합니다</p>
+            </div>
+
+            <form class="login-form" action="/login" method="post">
+                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+
+                <div class="form-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="id" name="id" placeholder=" " required>
+                    <label for="id">아이디</label>
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" placeholder=" " required>
+                    <label for="password">비밀번호</label>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    로그인
+                </button>
+            </form>
+
+            <div class="social-section">
+                <div class="social-divider">
+                    <span>또는</span>
+                </div>
+                <div class="social-buttons">
+                    <a href="/oauth2/authorization/google" class="social-btn google">
+                        <i class="fab fa-google"></i>
+                        구글 로그인
+                    </a>
+                    <a href="/oauth2/authorization/naver" class="social-btn naver">
+                        <i class="fas fa-comment"></i>
+                        네이버 로그인
+                    </a>
+                </div>
+            </div>
+
+            <div class="login-links">
+                <a th:href="@{/users/newP}">
+                    <i class="fas fa-user-plus"></i>
+                    회원가입
+                </a>
+                <a th:href="@{/users/findPwdP}">
+                    <i class="fas fa-key"></i>
+                    비밀번호 찾기
+                </a>
+                <a th:href="@{/board}">
+                    <i class="fas fa-home"></i>
+                    게시글 보러가기
+                </a>
+            </div>
+
+            <!-- 세션에서 에러 메시지 출력 -->
+            <div th:if="${session.errorMessage}" class="error-message" th:text="${session.errorMessage}"></div>
         </div>
-
-        <div class="form-group">
-            <input type="password" id="password" name="password" required>
-            <label for="password">비밀번호</label>
-        </div>
-
-        <button type="submit">로그인</button>
-
-        <div class="social-buttons">
-            <a href="/oauth2/authorization/google">구글 로그인</a>
-            <a href="/oauth2/authorization/naver">네이버 로그인</a>
-        </div>
-
-        <a th:href="@{/users/newP}">회원가입</a>
-        <a th:href="@{/users/findPwdP}">비밀번호찾기</a>
-        <a th:href="@{/board}">게시글가기</a>
-        <!-- 세션에서 에러 메시지 출력 -->
-        <div th:if="${session.errorMessage}" class="error-message" th:text="${session.errorMessage}"></div>
-        </div>
-    </form>
-</main>
+    </div>
 </body>
+
 </html>

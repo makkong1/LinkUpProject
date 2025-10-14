@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
                     ...getCsrfHeaders()
                 },
                 body: JSON.stringify(commentData)

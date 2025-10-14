@@ -93,6 +93,7 @@ public class BoardController {
             @ApiResponse(responseCode = "302", description = "게시글 저장 성공 시 게시글 목록으로 리다이렉트"),
             @ApiResponse(responseCode = "500", description = "파일 저장 실패 시 게시글 목록으로 리다이렉트", content = @Content)
     })
+
     public String create(@ModelAttribute Board board,
             @RequestParam("files") List<MultipartFile> files,
             Principal principal,

@@ -49,7 +49,7 @@ public class BoardService {
 
         Page<Board> filteredBoards = (hasCategory || hasKeyword)
                 ? handleUserBoardFilter(selectValue, text, pageable, hasCategory, hasKeyword)
-                : boardRepository.findByCategory("GENERAL", pageable);
+                : boardRepository.findByCategoryOrderByUploadTimeDesc("GENERAL", pageable);
 
         // 나머지 게시글을 BoardListDTO로 변환
         List<BoardListDTO> allBoards = new ArrayList<>(noticeBoards); // 공지사항은 이미 BoardListDTO
@@ -57,50 +57,6 @@ public class BoardService {
 
         // 합쳐진 게시글 리스트를 다시 Page 객체로 변환
         return new PageImpl<>(allBoards, pageable, filteredBoards.getTotalElements());
-    }
-
-    // 게시글 조회 메서드
-    @Transactional(readOnly = true)
-    public Optional<BoardDTO> getBoardById(Long id) {
-        return boardRepository.findById(id)
-                .map(board -> boardConverter.convertToDTO(board));
-    }
-
-    // 비동기로 게시글 조회수 증가 처리
-    @Async
-    @Transactional
-    public void increaseViewCount(Long id) {
-        boardRepository.incrementViewCount(id);
-    }
-
-    // 게시글 삭제
-    public void deleteBoard(Long id) {
-        boardRepository.findById(id).ifPresent(board -> {
-            // 공지사항이면 캐시 삭제
-            // equalsIgnoreCase : str1과 str2의 내용이 대소문자 무시하고 같으면 true 반환
-            if ("NOTICE".equalsIgnoreCase(board.getCategory())) {
-                boardCacheService.clearNoticeBoardCache();
-                log.debug("공지사항 삭제됨 - 캐시 무효화 수행");
-            }
-        });
-
-        boardRepository.deleteById(id);
-    }
-
-    // 게시글 신고
-    @Transactional
-    public boolean reportBoard(Long id) {
-        Optional<Board> optionalBoard = boardRepository.findById(id);
-
-        if (optionalBoard.isPresent()) {
-            Board board = optionalBoard.get();
-            board.setIsDeleted("R"); // 신고된 게시글은 R로 상태 변경
-            board.incrementBoardReport(false); // 신고 횟수 증가
-            boardRepository.save(board); // 변경된 게시글 저장
-            return true; // 신고 처리 성공
-        }
-
-        return false; // 해당 게시글이 존재하지 않을 경우 신고 처리 실패
     }
 
     // 공통 검색 로직
@@ -153,7 +109,7 @@ public class BoardService {
             boolean hasKeyword) {
 
         if (!hasCategory && !hasKeyword) {
-            return boardRepository.findByCategory("GENERAL", pageable);
+            return boardRepository.findByCategoryOrderByUploadTimeDesc("GENERAL", pageable);
         }
 
         if (!hasCategory && hasKeyword) {
@@ -161,15 +117,59 @@ public class BoardService {
         }
 
         if (hasCategory && !hasKeyword) {
-            return boardRepository.findByCategory("GENERAL", pageable);
+            return boardRepository.findByCategoryOrderByUploadTimeDesc("GENERAL", pageable);
         }
 
         return switch (selectValue) {
             case "title" -> boardRepository.searchByTitleForUsers(text, "INQUIRY", pageable);
             case "writer" -> boardRepository.searchByWriterForUsers(text, "INQUIRY", pageable);
             case "content" -> boardRepository.searchByContentForUsers(text, "INQUIRY", pageable);
-            default -> boardRepository.findByCategory("GENERAL", pageable);
+            default -> boardRepository.findByCategoryOrderByUploadTimeDesc("GENERAL", pageable);
         };
+    }
+
+    // 게시글 조회 메서드
+    @Transactional(readOnly = true)
+    public Optional<BoardDTO> getBoardById(Long id) {
+        return boardRepository.findById(id)
+                .map(board -> boardConverter.convertToDTO(board));
+    }
+
+    // 비동기로 게시글 조회수 증가 처리
+    @Async
+    @Transactional
+    public void increaseViewCount(Long id) {
+        boardRepository.incrementViewCount(id);
+    }
+
+    // 게시글 삭제
+    public void deleteBoard(Long id) {
+        boardRepository.findById(id).ifPresent(board -> {
+            // 공지사항이면 캐시 삭제
+            // equalsIgnoreCase : str1과 str2의 내용이 대소문자 무시하고 같으면 true 반환
+            if ("NOTICE".equalsIgnoreCase(board.getCategory())) {
+                boardCacheService.clearNoticeBoardCache();
+                log.debug("공지사항 삭제됨 - 캐시 무효화 수행");
+            }
+        });
+
+        boardRepository.deleteById(id);
+    }
+
+    // 게시글 신고
+    @Transactional
+    public boolean reportBoard(Long id) {
+        Optional<Board> optionalBoard = boardRepository.findById(id);
+
+        if (optionalBoard.isPresent()) {
+            Board board = optionalBoard.get();
+            board.setIsDeleted("R"); // 신고된 게시글은 R로 상태 변경
+            board.incrementBoardReport(false); // 신고 횟수 증가
+            boardRepository.save(board); // 변경된 게시글 저장
+            return true; // 신고 처리 성공
+        }
+
+        return false; // 해당 게시글이 존재하지 않을 경우 신고 처리 실패
     }
 
     public Board save(Board board) {
