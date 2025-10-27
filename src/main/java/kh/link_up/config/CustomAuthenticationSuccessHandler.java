@@ -88,9 +88,36 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             response.sendRedirect("/board"); // 사용자 대시보드로 리다이렉트
         }
 
-        // 로그인 성공 시 사용자 정보 업데이트: 로그인 실패 횟수 초기화 및 계정 잠금 해제
-        if (user.isAccountLocked()) {
+        if (user == null) {
+            // DB에 없는 사용자 → 신규 OAuth2 유저면 자동 회원가입
+            // OAuth2에서 이메일 정보 가져오기
+            String email = "";
+            if (authentication instanceof OAuth2AuthenticationToken) {
+                OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
+                email = oauth2Token.getPrincipal().getAttribute("email");
+                if (email == null) {
+                    email = username; // 이메일이 없으면 username을 사용
+                }
+            } else {
+                email = username; // 일반 로그인의 경우 username을 사용
+            }
 
+            user = Users.builder()
+                    .id(username)
+                    .uEmail(email)
+                    .uRole("USER")
+                    .uUsername(username)
+                    .uNickname(username)
+                    .password("") // OAuth2 사용자는 비밀번호 없음
+                    .failedLoginAttempts(0)
+                    .accountLocked(false)
+                    .build();
+            usersRepository.save(user);
+            log.info("신규 OAuth2 사용자 생성: {}", username);
+        }
+
+        // 로그인 성공 시 사용자 정보 업데이트: 로그인 실패 횟수 초기화 및 계정 잠금 해제
+        if (user != null && user.isAccountLocked()) {
             // 로그인 실패 횟수 초기화
             user.setFailedLoginAttempts(0);
             // 계정 잠금 해제
@@ -99,10 +126,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             // 변경된 사용자 정보 저장
             usersRepository.save(user);
 
-            log.debug("로그인성공 시도횟수 및 잠금상태 초기화 /  {}. ", username, user.isAccountLocked(), user.getFailedLoginAttempts());
-
-        } else {
-            log.warn("유저 없음: {}", username);
+            log.debug("로그인성공 시도횟수 및 잠금상태 초기화 / 사용자: {}, 잠금상태: {}, 실패횟수: {}",
+                    username, user.isAccountLocked(), user.getFailedLoginAttempts());
         }
     }
 }
