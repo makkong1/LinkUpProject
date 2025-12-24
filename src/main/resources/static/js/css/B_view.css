@@ -100,6 +100,10 @@ body {
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 
+:root[data-theme='dark'] .post-header {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+}
+
 .post-title {
     font-size: 2rem;
     font-weight: 700;
@@ -110,6 +114,14 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+:root[data-theme='dark'] .post-title {
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+    color: var(--gray-900);
 }
 
 .post-meta {
@@ -299,6 +311,7 @@ body {
     min-height: 100px;
     transition: var(--transition);
     background: var(--white);
+    color: var(--gray-800);
 }
 
 .comment-form textarea:focus {

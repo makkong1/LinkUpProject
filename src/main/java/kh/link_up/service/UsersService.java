@@ -259,7 +259,7 @@ public class UsersService {
         return false;
     }
 
-    // 아이다로 user 찾기
+    // 아이디로 user 찾기
     public Optional<Users> findByUId(String id) {
         return usersRepository.findById(id);
     }
