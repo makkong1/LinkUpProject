@@ -1,204 +1,167 @@
 // 공통 error 처리 함수
-function handleError(xhr, status, error) {
-  if (xhr.status === 401) {
-    let redirectLoginP = confirm("로그인이 필요합니다. 로그인화면으로 가시겠습니까?");
-    if (redirectLoginP) {
-      window.location.href = "/users/loginP"; // 로그인 페이지로 리디렉션
+function handleError(response) {
+    if (response.status === 401) {
+        const redirectLoginP = confirm("로그인이 필요합니다. 로그인화면으로 가시겠습니까?");
+        if (redirectLoginP) {
+            window.location.href = "/users/loginP";
+        }
+    } else if (response.status === 403) {
+        alert("접근 권한이 없습니다.");
+    } else {
+        alert("요청 처리에 실패했습니다.");
+        console.error("Error: ", response);
     }
-  } else if (xhr.status === 403) {
-    // 권한 부족 시 403 응답을 받으면 권한 없음 메시지 표시
-    alert("접근 권한이 없습니다.");
-  } else {
-    console.log("Error: " + error);
-    alert("요청 처리에 실패했습니다.");
-  }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const userId = $("#userId").data("username"); // HTML에서 userId를 가져온다고 가정
-  const userEmail = $("#userEmail").data("email");
-  if (userId) {
-    startSSENotifications(userId); // SSE 알림 시작
-  } else {
-    console.log("로그인 필요");
-  }
-});
+// CSRF 토큰 가져오기
+function getCsrfHeaders() {
+    const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
+    const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+    return { [header]: token };
+}
 
-// CSRF 토큰을 AJAX 요청에 추가
-$(document).ajaxSend(function (event, xhr) {
-  const csrfToken = $("meta[name='_csrf']").attr("content");
-  const csrfHeader = $("meta[name='_csrf_header']").attr("content");
-  xhr.setRequestHeader(csrfHeader, csrfToken);
-});
-
-$(document).ready(function () {
-  // 댓글 등록
-  $(document).on("click", "#commentSubmit", function () {
-    let commentData = {
-      c_content: $("#commentContent").val(), // 댓글 내용
-      c_writer: $("#writerId").val(), // 댓글 작성자 ID
-      b_idx: $("#boardId").val(), // 게시글 ID
-      uEmail: $("#writerEmail").val(),
-    };
-// commentData 출력
-    console.log(commentData);
-    // 댓글이 빈 경우 처리
-    if (commentData.c_content.trim() === "") {
-      alert("댓글을 입력해주세요.");
-      return;
+// DOMContentLoaded 처리
+document.addEventListener("DOMContentLoaded", function() {
+    const userId = document.getElementById("userId")?.dataset.username;
+    if (userId) {
+        startSSENotifications(userId); // SSE 알림 시작
+    } else {
+        console.log("로그인 필요");
     }
 
-    // AJAX 요청으로 댓글 등록
-    $.ajax({
-      url: "/users/board/comments",
-      method: "POST",
-      data: JSON.stringify(commentData),
-      contentType: "application/json",
-      success: function (response) {
-        const newCommentHtml = `
-          <div class="comment">
-            <strong>${response.c_idx} 번</strong>
-            <p>
-              <strong>${response.c_writer}</strong>: ${response.c_content}
-            </p>
-            <p><small>작성일: ${response.c_upLoad}</small></p>
-            <div>
-              <input type="button" value="삭제" data-comment-id="${response.c_idx}" />
-            </div>
-          </div>
-        `;
-        $("#commentList").append(newCommentHtml);  // 기존 댓글 하단에 추가
-        $("#commentContent").val("");              // 입력창 초기화
-      },
-      error: handleError, // error 처리 함수 호출
-    });
-  });
+    // 댓글 등록
+    const commentSubmit = document.getElementById("commentSubmit");
+    if (commentSubmit) {
+        commentSubmit.addEventListener("click", function() {
+            const commentData = {
+                c_content: document.getElementById("commentContent").value,
+                c_writer: document.getElementById("writerId").value,
+                b_idx: document.getElementById("boardId").value,
+                uEmail: document.getElementById("writerEmail").value
+            };
 
-// 좋아요 증가
-$(document).on("click", "#likeButton", function () {
-  const boardId = $(this).data("board-id");
-  const $likeCount = $("#likeCount");
-  const currentCount = parseInt($likeCount.text() || "0");
+            if (!commentData.c_content.trim()) {
+                alert("댓글을 입력해주세요.");
+                return;
+            }
 
-  // UI 즉시 증가
-  $likeCount.text(currentCount + 1);
-
-  $.ajax({
-    url: "/board/" + boardId + "/like",
-    method: "POST",
-    contentType: "application/json",
-    success: function (response) {
-    console.log($("#likeCount").length);  // 0이면 선택자 문제
-      $("#likeCount").text(response.likeCount); // 값만 갱신
-    },
-    error: handleError,
-  });
-});
-
-// 싫어요 증가
-$(document).on("click", "#dislikeButton", function () {
-  const boardId = $(this).data("board-id");
-  const $dislikeCount = $("#dislikeCount");
-  const currentCount = parseInt($dislikeCount.text() || "0");
-
-  // UI 즉시 증가
-  $dislikeCount.text(currentCount + 1);
-
-
-  $.ajax({
-    url: "/board/" + boardId + "/dislike",
-    method: "POST",
-    contentType: "application/json",
-    success: function (response) {
-      $("#dislikeCount").text(response.dislikeCount); // 값만 갱신
-    },
-    error: handleError,
-  });
-});
-
-// 댓글 좋아요 증가
-$(document).on("click", ".comment-like-button", function () {
-  const commentId = $(this).data("comment-id");
-  const $likeCount = $(this).siblings(".comment-like-count");
-  const currentCount = parseInt($likeCount.text() || "0");
-
-  // UI 즉시 증가
-  $likeCount.text(currentCount + 1);
-
-  $.ajax({
-    url: "/users/" +"/comment/" + commentId + "/like",
-    method: "POST",
-    contentType: "application/json",
-    success: function (response) {
-      $likeCount.text(response.likeCount); // 서버에서 받은 최신 값으로 갱신
-    },
-    error: handleError,
-  });
-});
-
-// 댓글 싫어요 증가
-$(document).on("click", ".comment-dislike-button", function () {
-  const commentId = $(this).data("comment-id");
-  const $dislikeCount = $(this).siblings(".comment-dislike-count");
-  const currentCount = parseInt($dislikeCount.text() || "0");
-
-  // UI 즉시 증가
-  $dislikeCount.text(currentCount + 1);
-
-  $.ajax({
-    url: "/users/" + "/comment/" + commentId + "/dislike",
-    method: "POST",
-    contentType: "application/json",
-    success: function (response) {
-      $dislikeCount.text(response.dislikeCount); // 서버에서 받은 최신 값으로 갱신
-    },
-    error: handleError,
-  });
-});
-
-  // 댓글 삭제
-  $(document).on("click", "#deleteComment", function () {
-    const commentId = $(this).data("comment-id"); // 삭제할 댓글의 ID 가져오기
-
-    const isConfirmed = confirm("삭제 후 취소할 수 없습니다. 삭제하시겠습니까?");
-    if (!isConfirmed) {
-      return;
+            fetch("/users/board/comments", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    ...getCsrfHeaders()
+                },
+                body: JSON.stringify(commentData)
+            })
+            .then(res => {
+                if (!res.ok) throw res;
+                return res.json();
+            })
+            .then(response => {
+                const newCommentHtml = `
+                    <div class="comment">
+                        <strong>${response.c_idx} 번</strong>
+                        <p><strong>${response.c_writer}</strong>: ${response.c_content}</p>
+                        <p><small>작성일: ${response.c_upLoad}</small></p>
+                        <div>
+                            <input type="button" value="삭제" data-comment-id="${response.c_idx}" class="delete-comment-btn"/>
+                        </div>
+                    </div>
+                `;
+                document.getElementById("commentList").insertAdjacentHTML("beforeend", newCommentHtml);
+                document.getElementById("commentContent").value = "";
+            })
+            .catch(handleError);
+        });
     }
 
-    // AJAX 요청으로 댓글 삭제 처리
-    $.ajax({
-      url: "/users/board/comments/" + commentId,
-      method: "POST",
-      data: JSON.stringify({ commentId: commentId }), // 삭제할 댓글의 ID를 전달
-      contentType: "application/json",
-      success: function (response) {
-        alert("댓글을 삭제했습니다.");
-        window.location.reload();
-      },
-      error: handleError, // error 처리 함수 호출
-    });
-  });
+    // 좋아요 / 싫어요 공통 함수
+    function handleLikeDislike(buttonId, countId, urlSuffix) {
+        const button = document.getElementById(buttonId);
+        if (!button) return;
 
-  // 댓글 신고
-  $(document).on("click", "#reportComment", function () {
-    const forReportCommentId = $(this).data("comment-id"); // 신고할 댓글의 id
+        button.addEventListener("click", function() {
+            const boardId = button.dataset.boardId;
+            const countEl = document.getElementById(countId);
+            const currentCount = parseInt(countEl.textContent || "0");
+            countEl.textContent = currentCount + 1;
 
-    const isFired = confirm("신고하시겠습니까?");
-    if (!isFired) {
-      return;
+            fetch(`/board/${boardId}/${urlSuffix}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...getCsrfHeaders() }
+            })
+            .then(res => {
+                if (!res.ok) throw res;
+                return res.json();
+            })
+            .then(response => {
+                countEl.textContent = urlSuffix === "like" ? response.likeCount : response.dislikeCount;
+            })
+            .catch(handleError);
+        });
     }
 
-    // AJAX 요청으로 댓글 신고 처리
-    $.ajax({
-      url: "/users/board/comment/" + forReportCommentId + "/report",
-      method: "POST",
-      data: JSON.stringify({ forReportCommentId: forReportCommentId }),
-      contentType: "application/json",
-      success: function (res) {
-        alert("신고 완료");
-        window.location.reload();
-      },
-      error: handleError, // error 처리 함수 호출
+    handleLikeDislike("likeButton", "likeCount", "like");
+    handleLikeDislike("dislikeButton", "dislikeCount", "dislike");
+
+    // 댓글 좋아요/싫어요 처리
+    document.getElementById("commentList")?.addEventListener("click", function(e) {
+        const target = e.target;
+        if (target.classList.contains("comment-like-button") || target.classList.contains("comment-dislike-button")) {
+            const isLike = target.classList.contains("comment-like-button");
+            const commentId = target.dataset.commentId;
+            const countEl = target.parentElement.querySelector(isLike ? ".comment-like-count" : ".comment-dislike-count");
+            countEl.textContent = (parseInt(countEl.textContent || "0") + 1);
+
+            fetch(`/users/comment/${commentId}/${isLike ? "like" : "dislike"}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...getCsrfHeaders() }
+            })
+            .then(res => {
+                if (!res.ok) throw res;
+                return res.json();
+            })
+            .then(response => {
+                countEl.textContent = isLike ? response.likeCount : response.dislikeCount;
+            })
+            .catch(handleError);
+        }
+
+        // 댓글 삭제
+        if (target.classList.contains("delete-comment-btn")) {
+            const commentId = target.dataset.commentId;
+            if (!confirm("삭제 후 취소할 수 없습니다. 삭제하시겠습니까?")) return;
+
+            fetch(`/users/board/comments/${commentId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...getCsrfHeaders() },
+                body: JSON.stringify({ commentId })
+            })
+            .then(res => {
+                if (!res.ok) throw res;
+                return res.json();
+            })
+            .then(() => location.reload())
+            .catch(handleError);
+        }
+
+        // 댓글 신고
+        if (target.id === "reportComment") {
+            const commentId = target.dataset.commentId;
+            if (!confirm("신고하시겠습니까?")) return;
+
+            fetch(`/users/board/comment/${commentId}/report`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...getCsrfHeaders() },
+                body: JSON.stringify({ forReportCommentId: commentId })
+            })
+            .then(res => {
+                if (!res.ok) throw res;
+                return res.json();
+            })
+            .then(() => location.reload())
+            .catch(handleError);
+        }
     });
-  });
 });

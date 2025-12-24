@@ -6,12 +6,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
 @Slf4j
-public record CustomUserDetails(Users user) implements UserDetails, Serializable {
+public record CustomUserDetails(Users user) implements UserDetails {
 
     public CustomUserDetails(Users user) {
         this.user = user;
@@ -19,7 +18,7 @@ public record CustomUserDetails(Users user) implements UserDetails, Serializable
         log.debug("CustomUserDetails 들어왔다 : {}", this.user);
     }
 
-    @Override //사용자 조회
+    @Override // 사용자 조회
     public Collection<? extends GrantedAuthority> getAuthorities() {
         System.out.println("getAuthorities 들어옴");
         Collection<GrantedAuthority> authorities = new ArrayList<>();
@@ -28,7 +27,7 @@ public record CustomUserDetails(Users user) implements UserDetails, Serializable
 
         // "ROLE_"이 이미 포함되어 있으면, 중복을 방지하기 위해 "ROLE_"만 추가
         if (!role.startsWith("ROLE_")) {
-            role = "ROLE_" + role;  // "ROLE_"이 없다면 붙여서 처리
+            role = "ROLE_" + role; // "ROLE_"이 없다면 붙여서 처리
         }
 
         authorities.add(new SimpleGrantedAuthority(role)); // 권한 문자열 반환

@@ -16,31 +16,31 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor_ = { @Autowired })
 @Slf4j
 public class BoardCacheService {
 
     private final BoardRepository boardRepository;
 
-    //공지사항 캐시 등록
+    // 공지사항 캐시 등록
     @Cacheable(value = "noticeBoards", key = "'list'")
     public BoardListDTOWrapper getNoticeBoard() {
         log.info("DB에서 조회 후 캐시합니다.");
 
-        List<Board> boards = boardRepository.findByCategory("NOTICE");
+        List<Board> boards = boardRepository.findByCategoryOrderByUploadTimeDesc("NOTICE");
 
         // BoardListDTO 리스트를 BoardListDTOWrapper로 감싸서 반환
         List<BoardListDTO> boardListDTOs = boards.stream()
                 .map(BoardListDTO::new)
                 .collect(Collectors.toList());
-//
-//        boardListDTOs.forEach(dto -> log.debug("boardListDTO: {}", dto));
+        //
+        // boardListDTOs.forEach(dto -> log.debug("boardListDTO: {}", dto));
         log.debug("공지사항 캐시 : {}", boardListDTOs);
         // BoardListDTOWrapper를 생성하여 반환
         return new BoardListDTOWrapper(boardListDTOs);
     }
 
-    //공지사항 캐시 삭제
+    // 공지사항 캐시 삭제
     @CacheEvict(value = "noticeBoards", key = "'list'")
     public void clearNoticeBoardCache() {
         log.info("공지사항 캐시 초기화");
@@ -51,13 +51,13 @@ public class BoardCacheService {
     public BoardListDTOWrapper refreshNoticeBoardCache() {
         log.info("공지사항 새로 등록 후 캐시 강제 갱신");
 
-        List<Board> boards = boardRepository.findByCategory("NOTICE");
+        List<Board> boards = boardRepository.findByCategoryOrderByUploadTimeDesc("NOTICE");
 
         List<BoardListDTO> boardListDTOs = boards.stream()
                 .map(BoardListDTO::new)
                 .collect(Collectors.toList());
 
-        log.debug("공지사항 재등록 : {}",boardListDTOs);
+        log.debug("공지사항 재등록 : {}", boardListDTOs);
 
         return new BoardListDTOWrapper(boardListDTOs);
     }

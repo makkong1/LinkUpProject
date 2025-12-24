@@ -9,9 +9,15 @@ public class NaverResponse implements Oauth2Response {
     private Map<String, Object> attributes;
 
     public NaverResponse(Map<String, Object> response) {
-        this.attributes = (Map<String, Object>) response.get("response");
-        log.debug("Naver Response attributes: {}", attributes);
-
+        Object res = response.get("response");
+        if (res instanceof Map<?, ?> map) {
+            // 타입 안전하게 변환
+            this.attributes = (Map<String, Object>) map;
+            log.debug("Naver Response attributes: {}", attributes);
+        } else {
+            this.attributes = Map.of(); // 빈 맵으로 초기화
+            log.warn("Unexpected response format from Naver: {}", response);
+        }
     }
 
     @Override
@@ -31,22 +37,21 @@ public class NaverResponse implements Oauth2Response {
 
     @Override
     public String getName() {
-        return  attributes.get("name").toString();
+        return attributes.get("name").toString();
     }
 
     @Override
     public String getPhone() {
-        return attributes.get("mobile").toString();  // 네이버에서 제공하는 전화번호
+        return attributes.get("mobile").toString(); // 네이버에서 제공하는 전화번호
     }
 
     @Override
     public String getBirthyear() {
-        return attributes.get("birthyear").toString();  // 네이버에서 제공하는 생년월일
+        return attributes.get("birthyear").toString(); // 네이버에서 제공하는 생년월일
     }
 
     @Override
     public String getGender() {
-        return attributes.get("gender").toString();  // 네이버에서 제공하는 성별
+        return attributes.get("gender").toString(); // 네이버에서 제공하는 성별
     }
 }
-

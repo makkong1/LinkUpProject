@@ -3,7 +3,6 @@ package kh.link_up.config;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,9 +19,9 @@ public class SessionTimeoutFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
-                         FilterChain filterChain) throws IOException, ServletException, ClassCastException {
+            FilterChain filterChain) throws IOException, ServletException, ClassCastException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        // HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         HttpSession session = httpRequest.getSession(false); // 기존 세션을 가져옴 (없으면 새로 생성 안함)
         if (session != null) {
@@ -39,8 +38,8 @@ public class SessionTimeoutFilter implements Filter {
             }
 
             // 밀리초를 분과 초로 변환
-            long remainingTimeInMinutes = remainingTimeInMillis / 1000 / 60;  // 남은 시간(분)
-            long remainingTimeInSeconds = (remainingTimeInMillis / 1000) % 60;  // 남은 시간(초)
+            long remainingTimeInMinutes = remainingTimeInMillis / 1000 / 60; // 남은 시간(분)
+            long remainingTimeInSeconds = (remainingTimeInMillis / 1000) % 60; // 남은 시간(초)
 
             // 로그 출력
             log.info("요청 처리 중 남은 세션 시간: {}분 {}초", remainingTimeInMinutes, remainingTimeInSeconds);
@@ -48,7 +47,7 @@ public class SessionTimeoutFilter implements Filter {
             if (remainingTimeInMinutes <= 0 && remainingTimeInSeconds <= 0) {
                 log.info("세션이 만료되었습니다.");
             }
-        }else {
+        } else {
             log.debug("세션없음");
         }
 

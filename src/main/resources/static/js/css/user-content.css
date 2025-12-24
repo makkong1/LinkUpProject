@@ -1,103 +1,40 @@
-/* 공통 스타일 */
+/* Theme tokens */
+:root {
+    --uc-bg: #f7f8fa;
+    --uc-surface: #ffffff;
+    --uc-subtle: #f9fafb;
+    --uc-text-main: #22223b;
+    --uc-text-sub: #6c757d;
+    --uc-border: #e5e7eb;
+    --uc-shadow: 0 4px 24px 0 rgba(0,0,0,0.07);
+    --uc-primary: #4f8cff;
+    --uc-primary-soft: rgba(79,140,255,.12);
+    --uc-item-bg: #ffffff;
+    --uc-item-hover: #f7faff;
+    --uc-chip-bg: #f1f3f5;
+}
+
+:root[data-theme='dark'] {
+    --uc-bg: #181a1b;
+    --uc-surface: #23262b;
+    --uc-subtle: #1d2024;
+    --uc-text-main: #f1f3f5;
+    --uc-text-sub: #b0b8c1;
+    --uc-border: #343a40;
+    --uc-shadow: 0 4px 24px 0 rgba(0,0,0,0.25);
+    --uc-primary: #7ab8ff;
+    --uc-primary-soft: rgba(122,184,255,.15);
+    --uc-item-bg: #23262b;
+    --uc-item-hover: #292d33;
+    --uc-chip-bg: #2a2e33;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
+    background: var(--uc-bg);
+    color: var(--uc-text-main);
+    margin: 0;
 }
 
-/* 탭 네비게이션 스타일 */
-.tabs {
-    display: flex;
-    cursor: pointer;
-    justify-content: space-around;
-    margin-bottom: 20px;
-    flex-wrap: wrap; /* 모바일 환경에서 탭들이 자동으로 줄바꿈 되도록 설정 */
-}
-
-.tab {
-    padding: 10px 20px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    transition: background-color 0.3s ease;
-    margin: 5px; /* 모바일에서 탭 간의 여백 추가 */
-}
-
-.tab.active {
-    background-color: #007bff;
-    color: white;
-}
-
-.tab-content {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.tab-content.active {
-    display: block;
-    opacity: 1;
-}
-
-/* 각 섹션 스타일 */
-.boardContents, .commentContents, .notionContents {
-    list-style-type: none;
-    padding: 0;
-}
-
-.boardContents li, .commentContents li, .notionContents li {
-    padding: 10px;
-    border: 1px solid #ccc;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    background-color: #fafafa;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.boardContents li:hover, .commentContents li:hover, .notionContents li:hover {
-    transform: scale(1.004);
-    background-color: #f5f5f5;
-}
-
-/* 애니메이션 효과 */
-.tab-content {
-    animation: fadeInUp 0.5s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* 모바일 반응형 스타일 */
-@media (max-width: 768px) {
-    .tabs {
-        flex-direction: column; /* 탭을 세로로 쌓이게 설정 */
-        align-items: center; /* 중앙 정렬 */
-    }
-
-    .tab {
-        width: 80%; /* 탭 너비 조정 */
-        text-align: center; /* 텍스트 중앙 정렬 */
-    }
-
-    .boardContents li, .commentContents li, .notionContents li {
-        padding: 8px;
-        font-size: 14px;
-    }
-}
-
-@media (max-width: 480px) {
-    .tab {
-        width: 90%; /* 더 작은 화면에서 너비 확대 */
-        font-size: 12px; /* 텍스트 크기 줄임 */
-    }
-
-    .boardContents li, .commentContents li, .notionContents li {
-        font-size: 12px;
-    }
-}
+/* Legacy classes kept minimal for compatibility (not used in new markup) */
+.tabs, .tab, .tab-content, .boardContents, .commentContents, .notionContents { display:none; }

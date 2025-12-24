@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 @Controller
 @RequestMapping("/users")
 // RequiredArgsConstructor가 생성자주입을 대신해줌 (lombok 어노테이션임)
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor_ = { @Autowired })
 @Tag(name = "Users API", description = "사용자 관련 API")
 public class UsersController {
 
@@ -80,7 +80,7 @@ public class UsersController {
         model.addAttribute("notions", notionDTOList);
         return "notion/Notion_main";
     }
-    
+
     @Operation(summary = "회원정보 수정", description = "회원 정보 수정 화면 뷰를 반환합니다.")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{uIdx}/editP")
@@ -127,7 +127,8 @@ public class UsersController {
     @ResponseBody
     public ResponseEntity<DuplicateCheckResponse> checkNickname(@RequestParam("nickname") String nickname) {
         boolean isDuplicate = usersService.isNicknameDuplicate(nickname);
-        return ResponseEntity.ok(new DuplicateCheckResponse(isDuplicate, isDuplicate ? "이미 사용 중인 닉네임입니다." : "사용 가능한 닉네임입니다."));
+        return ResponseEntity
+                .ok(new DuplicateCheckResponse(isDuplicate, isDuplicate ? "이미 사용 중인 닉네임입니다." : "사용 가능한 닉네임입니다."));
     }
 
     @Operation(summary = "아이디 체크", description = "중복 아이디를 체크합니다.")
@@ -135,7 +136,8 @@ public class UsersController {
     @ResponseBody
     public ResponseEntity<DuplicateCheckResponse> checkId(@RequestParam("id") String id) {
         boolean isDuplicate = usersService.isUserIdDuplicate(id);
-        return ResponseEntity.ok(new DuplicateCheckResponse(isDuplicate, isDuplicate ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다."));
+        return ResponseEntity
+                .ok(new DuplicateCheckResponse(isDuplicate, isDuplicate ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다."));
     }
 
     @Operation(summary = "비밀번호 찾기", description = "비밀번호를 찾습니다.")
@@ -147,7 +149,7 @@ public class UsersController {
             CompletableFuture<String> futureAuthCode = usersService.sendAuthCodeToEmail(id, email.get());
 
             // 비동기 작업이 완료될 때까지 대기하고 결과 받기
-            String authCode = futureAuthCode.join();  // 결과 대기
+            String authCode = futureAuthCode.join(); // 결과 대기
 
             model.addAttribute("id", id);
             model.addAttribute("authCode", authCode);
@@ -160,7 +162,8 @@ public class UsersController {
 
     @Operation(summary = "이메일 인증번호 체크", description = "이메일로 보낸 인증번호가 맞는지 체크합니다,")
     @PostMapping("/verifyAuthCode")
-    public String verifyAuthCode(@RequestParam("id") String id, @RequestParam("authCode") String authCode, Model model) {
+    public String verifyAuthCode(@RequestParam("id") String id, @RequestParam("authCode") String authCode,
+            Model model) {
         boolean isValidCode = usersService.verifyAuthCode(id, authCode);
         if (isValidCode) {
             model.addAttribute("id", id);
@@ -173,7 +176,8 @@ public class UsersController {
 
     @Operation(summary = "비밀번호 수정", description = "비밀번호 수정을 처리합니다.")
     @PostMapping("/changePassword")
-    public String changePassword(@RequestParam("id") String id, @RequestParam("password") String password, Model model) {
+    public String changePassword(@RequestParam("id") String id, @RequestParam("password") String password,
+            Model model) {
         boolean isUpdated = usersService.changePassword(id, password);
         if (isUpdated) {
             return "users/login";
@@ -183,11 +187,11 @@ public class UsersController {
         }
     }
 
-    //활동보기
+    // 활동보기
     @Operation(summary = "회원 활동 보기", description = "회원 개인의 활동(게시글, LinkUp, 댓글)을 조회합니다.")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @GetMapping("/{idx}")
-    public String userContent(@PathVariable("idx") Long idx,Model model){
+    public String userContent(@PathVariable("idx") Long idx, Model model) {
         log.debug("userId : {}", idx);
         UsersDTO userContents = usersService.getUserContents(idx);
         model.addAttribute("userContents", userContents);
@@ -206,9 +210,10 @@ public class UsersController {
         return Optional.empty();
     }
 
-//    중복 체크 응답 DTO record클래스로 처리 자바14부터 나온기능
-//    자동 생성자 및 메서드: record를 사용하면 생성자, getter 메서드,
-//    equals(), hashCode(), toString() 메서드가 자동으로 생성됩니다.
-//    예를 들어, 위 코드에서는 isDuplicate()와 getMessage() 메서드가 자동으로 만들어짐
-    public record DuplicateCheckResponse(boolean isDuplicate, String message) {}
+    // 중복 체크 응답 DTO record클래스로 처리 자바14부터 나온기능
+    // 자동 생성자 및 메서드: record를 사용하면 생성자, getter 메서드,
+    // equals(), hashCode(), toString() 메서드가 자동으로 생성됩니다.
+    // 예를 들어, 위 코드에서는 isDuplicate()와 getMessage() 메서드가 자동으로 만들어짐
+    public record DuplicateCheckResponse(boolean isDuplicate, String message) {
+    }
 }

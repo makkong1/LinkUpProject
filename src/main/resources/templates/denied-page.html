@@ -1,43 +1,178 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>접근 거부</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>접근 거부 | LinkUp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/js/css/commonStyle.css}">
     <style>
-        .modal {
-            display: block;
-            position: fixed;
-            top: 70%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1050;
+        /* Denied Page Specific Styles */
+        .denied-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .denied-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow-lg);
+            padding: 3rem 2.5rem;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .denied-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--danger-gradient);
+        }
+
+        .denied-icon {
+            font-size: 4rem;
+            color: var(--danger-color);
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .denied-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .denied-message {
+            font-size: 1.1rem;
+            color: var(--gray-700);
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .denied-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .denied-actions .btn {
+            min-width: 140px;
+        }
+
+        .btn-secondary {
+            background: var(--gray-600);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-700);
+            color: var(--white);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+        }
+
+        .btn-info {
+            background: var(--success-gradient);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .denied-container {
+                padding: 1rem;
+            }
+
+            .denied-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .denied-icon {
+                font-size: 3rem;
+            }
+
+            .denied-title {
+                font-size: 1.5rem;
+            }
+
+            .denied-actions {
+                flex-direction: column;
+            }
+
+            .denied-actions .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .denied-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .denied-icon {
+                font-size: 2.5rem;
+            }
+
+            .denied-title {
+                font-size: 1.25rem;
+            }
+
+            .denied-message {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
-<body>
-<div class="modal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
 
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">알림</h5>
+<body>
+    <div class="denied-container">
+        <div class="denied-card">
+            <div class="denied-icon">
+                <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <div class="modal-body">
-                <p th:text="${msg} ?: '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'"></p>
-            </div>
-            <div class="modal-footer">
-                <button th:if="${session.action} == 'back'" onclick="window.history.back()" class="btn btn-secondary">뒤로가기</button>
+            <h1 class="denied-title">접근이 거부되었습니다</h1>
+            <p class="denied-message" th:text="${msg} ?: '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'"></p>
+            <div class="denied-actions">
+                <button th:if="${session.action} == 'back'" onclick="window.history.back()" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    뒤로가기
+                </button>
                 <a th:if="${session.action} == 'login'" href="/users/loginP">
-                    <button class="btn btn-primary">로그인 페이지로 가기</button>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        로그인 페이지로 가기
+                    </button>
                 </a>
                 <a th:if="${session.action} == 'home'" href="/board">
-                    <button class="btn btn-info">게시글으로 이동</button>
+                    <button class="btn btn-info">
+                        <i class="fas fa-home"></i>
+                        게시글으로 이동
+                    </button>
                 </a>
-                <button th:if="${session.action == null}" onclick="window.history.back()" class="btn btn-secondary">뒤로가기</button>
+                <button th:if="${session.action == null}" onclick="window.history.back()" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    뒤로가기
+                </button>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </body>
+
 </html>

@@ -32,7 +32,7 @@ import java.util.Optional;
 @Slf4j
 @Controller
 @RequestMapping("/admin") // 어드민 기본 경로
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor_ = { @Autowired })
 @Tag(name = "Admin", description = "관리자 관련 API (사용자, 게시판, 댓글 관리)")
 public class AdminController {
 
@@ -41,17 +41,18 @@ public class AdminController {
     private final SocialUserService socialUserService;
     private final CommentService commentService;
 
+    @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @GetMapping("/listForAdminP")
     @Operation(summary = "관리자 게시판 및 댓글 리스트 페이지", description = "게시글 및 신고 댓글 리스트를 페이징, 필터링해서 조회")
     public String boardListPFromAdmin(Model model,
-                                      @RequestParam(value = "page", defaultValue = "0") int page,
-                                      @RequestParam(value = "size", defaultValue = "10") int size,
-                                      @RequestParam(value = "select_value", defaultValue = "all") String selectValue,
-                                      @RequestParam(value = "text", defaultValue = "") String text,
-                                      @RequestParam(value = "select_comment_value", defaultValue = "all_comment") String selectComment,
-                                      @RequestParam(value = "text_comment", defaultValue = "") String textComment) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "select_value", defaultValue = "all") String selectValue,
+            @RequestParam(value = "text", defaultValue = "") String text,
+            @RequestParam(value = "select_comment_value", defaultValue = "all_comment") String selectComment,
+            @RequestParam(value = "text_comment", defaultValue = "") String textComment) {
 
-        Pageable boardPageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("uploadTime")));
+        Pageable boardPageable = PageRequest.of(page, size);
         Pageable commentPageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("cReport")));
 
         // 게시글 검색 기능
@@ -61,7 +62,7 @@ public class AdminController {
             model.addAttribute("boardList", boardList);
             log.info("admin Page board : {}", boardPageable.getPageNumber());
         } else {
-            boardList = boardService.getFilteredBoards(selectValue, text, boardPageable);
+            boardList = boardService.getFilteredBoardsCommon(selectValue, text, boardPageable, true);
             model.addAttribute("boardList", boardList);
         }
 
@@ -72,7 +73,8 @@ public class AdminController {
             commentList = commentService.getReportComment(commentPageable);
             model.addAttribute("commentList", commentList);
         } else {
-            model.addAttribute("commentList", commentService.getFilteredComments(selectComment, textComment, commentPageable));
+            model.addAttribute("commentList",
+                    commentService.getFilteredComments(selectComment, textComment, commentPageable));
         }
 
         return "admin/listForAdmin";
@@ -92,11 +94,12 @@ public class AdminController {
         return "admin/a_main"; // 관리자 대시보드 페이지 반환
     };
 
-    //사용자 블랙
+    // 사용자 블랙
     @Operation(summary = "사용자 차단", description = "사용자를 블랙리스트에 등록하여 차단")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/users/block/{id}")
-    public @ResponseBody String blockUserFromAdmin(@PathVariable("id") String id, @RequestParam("blockReason") String blockReason) {
+    public @ResponseBody String blockUserFromAdmin(@PathVariable("id") String id,
+            @RequestParam("blockReason") String blockReason) {
         Optional<Users> user = usersService.findByUId(id);
 
         if (user.isPresent()) {
@@ -108,7 +111,7 @@ public class AdminController {
         return "error";
     };
 
-    //블랙취소
+    // 블랙취소
     @Operation(summary = "사용자 차단 해제", description = "블랙리스트에서 사용자 차단 해제")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/users/unblock/{id}")
@@ -132,17 +135,18 @@ public class AdminController {
     public String unlockUserFromAdmin(@PathVariable("userId") String userId) {
         try {
             usersService.unlockUser(userId);
-            return "success";  // 상태 변경 성공
+            return "success"; // 상태 변경 성공
         } catch (Exception e) {
-            return "error";  // 상태 변경 실패
+            return "error"; // 상태 변경 실패
         }
     };
 
-    //관리자 전환
+    // 관리자 전환
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users/{id}/role")
     @Operation(summary = "관리자 권한 부여/해제", description = "사용자 권한을 ADMIN 혹은 SUB_ADMIN으로 승격/강등")
-    public @ResponseBody String changeUserRoleFromAdmin(@PathVariable("id") String id, @RequestParam("action") String action) {
+    public @ResponseBody String changeUserRoleFromAdmin(@PathVariable("id") String id,
+            @RequestParam("action") String action) {
         if ("promote".equals(action)) {
             usersService.promoteToAdmin(id);
         } else if ("demote".equals(action)) {
@@ -180,12 +184,12 @@ public class AdminController {
     @Operation(summary = "댓글 삭제", description = "관리자가 댓글을 삭제 처리")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/comment/{cIdx}/delete")
-    public ResponseEntity<String> deleteCommentFromAdmin(@PathVariable Long cIdx){
+    public ResponseEntity<String> deleteCommentFromAdmin(@PathVariable Long cIdx) {
         log.info("deleteComment c-Idx: {}", cIdx);
         boolean reportComment = commentService.deleteCommentForAdmin(cIdx);
-        if(reportComment){
+        if (reportComment) {
             return ResponseEntity.ok("success");
-        }else {
+        } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     };
@@ -193,12 +197,12 @@ public class AdminController {
     @Operation(summary = "댓글 신고 상태 해결", description = "관리자가 신고된 댓글의 상태를 해결")
     @PreAuthorize("hasRole('SUB_ADMIN') or hasRole('ADMIN')")
     @PostMapping("/comment/{cIdx}/resolve")
-    public ResponseEntity<String> resolveCommentFromAdmin(@PathVariable Long cIdx){
+    public ResponseEntity<String> resolveCommentFromAdmin(@PathVariable Long cIdx) {
         log.info("resolveComment c-Idx: {}", cIdx);
         boolean resolveComment = commentService.resolveCommentForAdmin(cIdx);
-        if(resolveComment){
+        if (resolveComment) {
             return ResponseEntity.ok("success");
-        }else {
+        } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     };

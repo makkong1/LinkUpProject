@@ -25,10 +25,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.security.Principal;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+// import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor_ = { @Autowired })
 @RequestMapping("/users")
 @Slf4j
 @Tag(name = "Comment", description = "댓글 관련 API")
@@ -39,7 +39,6 @@ public class CommentController {
     private final LikeDislikeUtil likeDislikeUtil;
     private final CommentNotificationSubscriber notificationSubscriber;
     private final CommentConverter commentConverter;
-    private final Map<String, SseEmitter> clientConnections = new ConcurrentHashMap<>();
 
     @Operation(summary = "댓글 작성", description = "댓글을 작성하고 작성된 댓글 정보를 반환합니다.")
     @ApiResponses(value = {
@@ -48,8 +47,8 @@ public class CommentController {
     })
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUB_ADMIN')")
     @PostMapping("/board/comments")
-    public ResponseEntity<?> createComment(@RequestBody CommentDTO commentDto,  Principal principal,
-                                           Authentication authentication) {
+    public ResponseEntity<?> createComment(@RequestBody CommentDTO commentDto, Principal principal,
+            Authentication authentication) {
         log.info("댓글작성 들어옴");
         log.info("createComment : {}", commentDto);
 
@@ -61,8 +60,7 @@ public class CommentController {
                 "%s : %s 게시글에 댓글이 달렸습니다. <a href='/board/%d'>게시글로 이동</a>",
                 comment.getBoard().getWriter().getId(),
                 boardTitle,
-                comment.getBoard().getBIdx()
-        );
+                comment.getBoard().getBIdx());
 
         // Redis Pub/Sub으로 발행 (comment_notifications 채널)
         log.debug("Redis로 메시지 발송함: {}", notificationMessage);
@@ -74,7 +72,7 @@ public class CommentController {
     }
 
     @Operation(summary = "SSE 알림 연결", description = "사용자 ID로 SSE 연결을 생성하여 실시간 알림을 받습니다.")
-    @GetMapping(value= "/notifications/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/notifications/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter getNotifications(@PathVariable String userId) {
         log.debug("userId : {}", userId);
         SseEmitter emitter = new SseEmitter(60 * 1000L);
@@ -86,6 +84,7 @@ public class CommentController {
             notificationSubscriber.removeClientConnection(userId);
             log.debug("SseEmitter 연결 완료: userId = {}", userId);
         });
+
         emitter.onTimeout(() -> {
             notificationSubscriber.removeClientConnection(userId);
             log.debug("SseEmitter 연결 타임아웃: userId = {}", userId);
@@ -106,8 +105,8 @@ public class CommentController {
         try {
             commentService.deleteComment(cIdx);
             return ResponseEntity.ok().build();
-        }catch (Exception e) {
-            log.error("삭제중 에러발생 : {}",e.getMessage());
+        } catch (Exception e) {
+            log.error("삭제중 에러발생 : {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 삭제에 실패했습니다.");
         }
     }

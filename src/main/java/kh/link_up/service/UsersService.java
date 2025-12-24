@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor(onConstructor_ = {@Autowired})
+@RequiredArgsConstructor(onConstructor_ = { @Autowired })
 public class UsersService {
 
     private final UsersRepository usersRepository;
@@ -44,8 +44,8 @@ public class UsersService {
     // 이메일 인증번호 저장을 위한 내부 클래스
     @Getter
     private static class AuthCode {
-        private final String code;  // 인증번호
-        private final LocalDateTime expirationTime;  // 만료 시간
+        private final String code; // 인증번호
+        private final LocalDateTime expirationTime; // 만료 시간
 
         public AuthCode(String code, LocalDateTime expirationTime) {
             this.code = code;
@@ -56,9 +56,9 @@ public class UsersService {
             return code;
         }
 
-        public LocalDateTime getExpirationTime() {
-            return expirationTime;
-        }
+        // public LocalDateTime getExpirationTime() {
+        // return expirationTime;
+        // }
 
         public boolean isExpired() {
             return LocalDateTime.now().isAfter(expirationTime);
@@ -71,7 +71,7 @@ public class UsersService {
         if (userOpt.isPresent()) {
             Users user = userOpt.get();
             if (user.isAccountLocked()) {
-                user.setAccountLocked(false);  // 잠금 해제
+                user.setAccountLocked(false); // 잠금 해제
                 usersRepository.save(user);
             } else {
                 throw new IllegalStateException("사용자는 이미 잠금 해제된 상태입니다.");
@@ -139,11 +139,11 @@ public class UsersService {
                 user.setPassword(passwordEncoder.encode(usersDTO.getPwd()));
             }
 
-            usersRepository.save(user);  // 업데이트된 사용자 정보 저장
+            usersRepository.save(user); // 업데이트된 사용자 정보 저장
         }
     }
 
-    //사용자 삭제
+    // 사용자 삭제
     public void deleteUser(Long u_idx) {
         Optional<Users> user = usersRepository.findById(u_idx);
         user.ifPresent(usersRepository::delete);
@@ -190,7 +190,7 @@ public class UsersService {
     @Async
     public CompletableFuture<String> sendAuthCodeToEmail(String u_id, String email) {
         // 인증번호 생성
-        String authCode = generateAuthCode(u_id);  // u_id를 전달하여 인증번호 생성
+        String authCode = generateAuthCode(u_id); // u_id를 전달하여 인증번호 생성
 
         // 이메일 전송
         sendEmail(email, authCode);
@@ -209,7 +209,7 @@ public class UsersService {
         // 인증번호를 Map에 저장 (u_id를 키로 사용)
         authCodeStore.put(u_id, new AuthCode(authCode, expirationTime));
 
-        return authCode;  // 생성된 인증번호 반환
+        return authCode; // 생성된 인증번호 반환
     }
 
     // 이메일로 인증번호 전송
@@ -219,7 +219,7 @@ public class UsersService {
         message.setTo(toEmail);
         message.setSubject("비밀번호 찾기 인증번호입니다.");
         message.setText("인증번호는 " + authCode + " 입니다.");
-        mailSender.send(message);  // 이메일 전송
+        mailSender.send(message); // 이메일 전송
     }
 
     // 인증번호 검증
@@ -232,7 +232,7 @@ public class UsersService {
 
         // 인증번호가 없거나 만료되었을 경우
         if (storedAuthCode == null || storedAuthCode.isExpired()) {
-            authCodeStore.remove(u_id);  // 만료된 인증번호 삭제
+            authCodeStore.remove(u_id); // 만료된 인증번호 삭제
             return false;
         }
 
@@ -247,24 +247,24 @@ public class UsersService {
         log.info("userOptional : {} ", userOptional);
         if (userOptional.isPresent()) {
             Users user = userOptional.get();
-            user.setPassword(passwordEncoder.encode(password));  // 비밀번호 암호화 후 업데이트
+            user.setPassword(passwordEncoder.encode(password)); // 비밀번호 암호화 후 업데이트
             user.setFailedLoginAttempts(0);
             user.setAccountLocked(false);
             usersRepository.save(user);
             // 인증번호 사용 후 삭제
-            authCodeStore.remove(u_id);  // 인증번호 삭제
+            authCodeStore.remove(u_id); // 인증번호 삭제
 
             return true;
         }
         return false;
     }
 
-    //아이다로 user 찾기
-    public Optional<Users> findByUId(String id){
+    // 아이디로 user 찾기
+    public Optional<Users> findByUId(String id) {
         return usersRepository.findById(id);
     }
 
-    //블락사유 저장 및 블락상태 저장
+    // 블락사유 저장 및 블락상태 저장
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUB_AMDIN')")
     public void blockUser(Users foundUser) {
         usersRepository.save(foundUser);
@@ -275,8 +275,8 @@ public class UsersService {
     public void promoteToAdmin(String id) {
         Users user = usersRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        user.setURole("SUB_ADMIN");  // 사용자 역할을 admin으로 변경
-        usersRepository.save(user);  // 변경된 사용자 정보 저장
+        user.setURole("SUB_ADMIN"); // 사용자 역할을 admin으로 변경
+        usersRepository.save(user); // 변경된 사용자 정보 저장
     }
 
     // 사용자 해제 (관리자 권한 제거)
@@ -284,7 +284,7 @@ public class UsersService {
     public void demoteFromAdmin(String id) {
         Users user = usersRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        user.setURole("USER");  // 사용자 역할을 user로 변경
-        usersRepository.save(user);  // 변경된 사용자 정보 저장
+        user.setURole("USER"); // 사용자 역할을 user로 변경
+        usersRepository.save(user); // 변경된 사용자 정보 저장
     }
 }

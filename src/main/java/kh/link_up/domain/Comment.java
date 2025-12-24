@@ -29,7 +29,7 @@ public class Comment {
     @JoinColumn(name = "social_user_id", referencedColumnName = "social_user_id", nullable = true) // 외래키 추가
     private SocialUser socialUser; // 소셜 로그인 사용자
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, length = 200)
     private String cContent; // 댓글 내용
 
     @Column(nullable = false, length = 50)

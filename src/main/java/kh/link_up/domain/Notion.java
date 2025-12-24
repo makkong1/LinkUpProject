@@ -37,9 +37,11 @@ public class Notion {
     private LocalDateTime nUploadTime; // 업로드 시간 (n_upload -> uploadTime)
 
     @Column(name = "n_view_cnt", nullable = false)
+    @Builder.Default
     private int nViewCount = 0; // 조회수 (n_view_cnt -> viewCount)
 
     @Column(name = "n_like", nullable = false)
+    @Builder.Default
     private int nLikeCount = 0; // 좋아요 수 (n_like -> likeCount)
 
     @Column(name = "n_filepath", nullable = true)
